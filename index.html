@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Game Store</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #121212;
+            color: white;
+            margin: 0;
+        }
+
+        h1 {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .game {
+            background: #1e1e1e;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .game:hover {
+            transform: scale(1.05);
+        }
+
+        .game img {
+            width: 100%;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>🎮 Game Store</h1>
+
+<div class="grid">
+
+    <div class="game" onclick="openGame('game1.html')">
+        <img src="https://via.placeholder.com/200x120">
+        <h3>Mon Jeu 1</h3>
+    </div>
+
+    <div class="game" onclick="openGame('game2.html')">
+        <img src="https://via.placeholder.com/200x120">
+        <h3>Mon Jeu 2</h3>
+    </div>
+
+</div>
+
+<script>
+function openGame(page) {
+    window.location.href = page;
+}
+</script>
+
+</body>
+</html>
