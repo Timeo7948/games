@@ -1,0 +1,1715 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏝️ Île Bonheur v3</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --coral:#FF6B6B;--yellow:#FFD93D;--mint:#6BCB77;--sky:#4ECDC4;
+  --purple:#A29BFE;--orange:#FFA552;--pink:#FF8FB1;--blue:#74B9FF;
+  --shadow:0 4px 20px rgba(0,0,0,.15);--shadow-lg:0 8px 40px rgba(0,0,0,.3);
+}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background:#1a1a2e}
+
+/* ── SETUP SCREEN ── */
+#setup{position:fixed;inset:0;background:linear-gradient(160deg,#0f0c29,#302b63,#24243e);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .7s}
+#setup.hidden{opacity:0;pointer-events:none}
+.setup-stars{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.star{position:absolute;background:white;border-radius:50%;animation:twinkle ease-in-out infinite}
+.setup-island{font-size:clamp(4rem,10vw,7rem);animation:floatSlow 3s ease-in-out infinite;margin-bottom:1rem}
+.setup-title{font-family:'Fredoka One';font-size:clamp(2rem,5vw,3.5rem);color:#FFD93D;
+  text-shadow:0 0 40px rgba(255,217,61,.6);margin-bottom:.3rem}
+.setup-sub{color:#A29BFE;font-size:.9rem;font-weight:700;letter-spacing:3px;margin-bottom:2rem;text-transform:uppercase}
+.setup-card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:24px;
+  padding:2rem;max-width:420px;width:90%;backdrop-filter:blur(20px)}
+.setup-label{color:rgba(255,255,255,.7);font-size:.8rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:.5rem}
+.setup-input{width:100%;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.2);color:white;
+  padding:.7rem 1rem;border-radius:14px;font-family:'Nunito';font-size:1.1rem;font-weight:700;outline:none;
+  margin-bottom:1.2rem;transition:border-color .2s}
+.setup-input:focus{border-color:#FFD93D}
+.setup-input::placeholder{color:rgba(255,255,255,.3)}
+.setup-mode-label{color:rgba(255,255,255,.6);font-size:.8rem;margin-bottom:.8rem;font-weight:600}
+.mode-toggle{display:flex;gap:.5rem;margin-bottom:1.5rem}
+.mode-btn{flex:1;padding:.5rem;border-radius:12px;border:2px solid rgba(255,255,255,.15);
+  background:rgba(255,255,255,.05);color:rgba(255,255,255,.6);cursor:pointer;font-family:'Nunito';
+  font-weight:700;font-size:.8rem;transition:all .2s;text-align:center}
+.mode-btn.sel{border-color:#FFD93D;background:rgba(255,217,61,.15);color:#FFD93D}
+.setup-btn{width:100%;background:linear-gradient(135deg,#FFD93D,#FF6B6B);border:none;color:white;
+  padding:.85rem;border-radius:14px;font-family:'Fredoka One';font-size:1.25rem;cursor:pointer;
+  box-shadow:0 6px 25px rgba(255,107,107,.4);transition:all .2s}
+.setup-btn:hover{transform:scale(1.03) translateY(-2px)}
+
+/* ── MAIN GAME ── */
+#game{position:fixed;inset:0;display:none;flex-direction:column}
+#game.visible{display:flex}
+
+/* ── TOP BAR ── */
+#top-bar{background:rgba(0,0,0,.35);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.1);
+  padding:.5rem 1rem;display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;z-index:100;gap:.4rem;flex-wrap:wrap}
+.top-logo{font-family:'Fredoka One';color:#FFD93D;font-size:1.2rem;white-space:nowrap;cursor:pointer}
+#clock{background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.15);color:white;
+  padding:.28rem .8rem;border-radius:20px;font-weight:700;font-size:.82rem;display:flex;align-items:center;gap:.35rem}
+.top-acts{display:flex;gap:.35rem;flex-wrap:wrap;align-items:center}
+.tbtn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:white;
+  padding:.28rem .7rem;border-radius:16px;cursor:pointer;font-family:'Nunito';font-weight:700;font-size:.75rem;
+  transition:all .2s;white-space:nowrap}
+.tbtn:hover{background:rgba(255,255,255,.25);transform:translateY(-1px)}
+.tbtn.accent{background:rgba(255,217,61,.18);border-color:rgba(255,217,61,.4);color:#FFD93D}
+.mode-indicator{padding:.25rem .7rem;border-radius:12px;font-size:.7rem;font-weight:800;
+  background:rgba(255,107,107,.2);color:#FF6B6B;border:1px solid rgba(255,107,107,.3)}
+.mode-indicator.safe{background:rgba(107,203,119,.2);color:#6BCB77;border-color:rgba(107,203,119,.3)}
+
+/* ── CONTENT ── */
+#content{flex:1;display:flex;overflow:hidden;position:relative}
+
+/* ── ISLAND ── */
+#island{flex:1;position:relative;overflow:hidden;user-select:none}
+#sky{position:absolute;inset:0;transition:background 2s ease}
+#sky.day{background:linear-gradient(180deg,#74B9FF 0%,#A8E6CF 44%,#55EFC4 44%,#00B894 70%,#00B894 100%)}
+#sky.sunset{background:linear-gradient(180deg,#FD79A8 0%,#FDCB6E 30%,#E17055 44%,#55c47a 44%,#00B894 70%,#00B894 100%)}
+#sky.night{background:linear-gradient(180deg,#0f0c29 0%,#1a3a5c 40%,#1a5a3a 44%,#00793c 70%,#00793c 100%)}
+#night-stars{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity 2s}
+#night-stars.on{opacity:1}
+#sun-moon{position:absolute;font-size:2.8rem;pointer-events:none;transition:all 2s ease;filter:drop-shadow(0 0 20px rgba(255,220,50,.8))}
+#clouds{position:absolute;top:0;left:0;right:0;height:45%;pointer-events:none;overflow:hidden}
+.cloud{position:absolute;animation:cloudDrift linear infinite}
+#water{position:absolute;bottom:0;left:0;right:0;height:26%;
+  background:linear-gradient(180deg,#48CAE4,#0077B6);overflow:hidden}
+.wave{position:absolute;width:200%;height:35px;background:rgba(255,255,255,.13);
+  border-radius:50%;animation:waveMove linear infinite;top:-12px;left:-50%}
+#ground{position:absolute;bottom:26%;left:0;right:0;height:5%;background:linear-gradient(180deg,#F9E79F,#E8C84A);
+  border-top:2px solid rgba(255,255,255,.25)}
+#deco-layer{position:absolute;bottom:26%;left:0;right:0;height:0;z-index:4;pointer-events:none}
+#bld-layer{position:absolute;bottom:26%;left:0;right:0;height:0;z-index:5}
+#av-layer{position:absolute;bottom:26%;left:0;right:0;height:0;z-index:20}
+
+/* ── BUILDINGS ── */
+.bld{position:absolute;bottom:0;cursor:pointer;transition:transform .18s;display:flex;flex-direction:column;align-items:center}
+.bld:hover{transform:scale(1.07) translateY(-5px)}
+.bld-body{border-radius:10px 10px 0 0;position:relative;overflow:hidden;box-shadow:inset -4px 0 8px rgba(0,0,0,.15)}
+.bld-win{position:absolute;background:rgba(255,255,255,.5);border-radius:3px;animation:winGlow 3s ease-in-out infinite}
+.bld-door{position:absolute;bottom:0;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.28);border-radius:6px 6px 0 0}
+.bld-icon{font-size:1.2rem;margin-bottom:2px;transition:transform .2s}
+.bld:hover .bld-icon{transform:scale(1.3) rotate(-5deg)}
+.bld-name{font-size:.6rem;font-weight:800;color:white;background:rgba(0,0,0,.5);padding:1px 5px;
+  border-radius:7px;white-space:nowrap;margin-top:2px;opacity:0;transition:opacity .2s}
+.bld:hover .bld-name{opacity:1}
+.bld-occupants{position:absolute;top:-14px;left:50%;transform:translateX(-50%);
+  display:flex;gap:2px;pointer-events:none}
+.occ-dot{width:8px;height:8px;border-radius:50%;border:1px solid white;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+
+/* ── AVATARS ── */
+.av{position:absolute;bottom:0;cursor:pointer;transition:bottom .3s}
+/* IMPORTANT: we use a wrapper that flips, but text inside is counter-flipped */
+.av-flip{transition:transform .2s}
+.av-body{display:flex;flex-direction:column;align-items:center;position:relative}
+/* Head */
+.av-head{width:36px;height:36px;border-radius:50%;position:relative;border:2.5px solid rgba(255,255,255,.3);
+  box-shadow:0 2px 8px rgba(0,0,0,.2);flex-shrink:0}
+.av-hair-top{position:absolute;top:-10px;left:50%;transform:translateX(-50%);font-size:15px;pointer-events:none;white-space:nowrap}
+.av-eyes{position:absolute;top:36%;left:0;right:0;display:flex;justify-content:center;gap:7px}
+.av-eye{width:6px;height:7px;background:#2D3436;border-radius:50%;position:relative}
+.av-pupil{width:2.5px;height:2.5px;background:white;border-radius:50%;position:absolute;top:1px;left:1.5px}
+.av-mouth{position:absolute;bottom:17%;left:50%;transform:translateX(-50%);font-size:9px;white-space:nowrap}
+/* Torso with arms */
+.av-torso-wrap{display:flex;align-items:center;gap:0;margin-top:-2px}
+.av-arm{width:8px;height:18px;border-radius:4px;position:relative}
+.av-arm.left{border-radius:4px 4px 4px 4px;transform-origin:top center;animation:armSwingL .55s ease-in-out infinite alternate}
+.av-arm.right{border-radius:4px 4px 4px 4px;transform-origin:top center;animation:armSwingR .55s ease-in-out infinite alternate}
+.av-hand{width:7px;height:7px;border-radius:50%;position:absolute;bottom:-3px;left:50%;transform:translateX(-50%)}
+.av-shirt{width:28px;height:22px;border-radius:6px 6px 0 0}
+/* Legs */
+.av-legs{display:flex;gap:3px;margin-top:0}
+.av-leg{width:10px;height:14px;border-radius:0 0 5px 5px;animation:legSwing .55s ease-in-out infinite alternate}
+.av-leg:nth-child(2){animation-delay:.275s}
+/* Shoes */
+.av-shoe{width:12px;height:5px;border-radius:3px;margin-top:-1px}
+/* Name tag — never flips */
+.av-nametag{font-size:8px;font-weight:800;color:white;background:rgba(0,0,0,.55);
+  padding:1px 5px;border-radius:7px;margin-top:2px;white-space:nowrap;pointer-events:none}
+/* Mood bubble */
+.av-mood-bbl{position:absolute;top:-30px;left:50%;transform:translateX(-50%);
+  font-size:14px;pointer-events:none;background:rgba(255,255,255,.95);
+  padding:1px 5px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.2);display:none;white-space:nowrap}
+.av-mood-bbl.show{display:block;animation:moodPop .4s ease-out}
+/* Dialog bubble */
+.dialog-bbl{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+  background:white;border-radius:14px;padding:.4rem .7rem;font-size:.7rem;font-weight:700;
+  color:#2D3436;max-width:160px;line-height:1.4;box-shadow:var(--shadow);z-index:50;
+  pointer-events:none;animation:bubbleIn .35s cubic-bezier(.17,.67,.3,1.3);white-space:normal;
+  min-width:60px;text-align:center}
+.dialog-bbl.adult{border:2px solid #FF6B6B;color:#c0392b}
+.dialog-bbl::after{content:'';position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);
+  width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:8px solid white}
+/* floating fx */
+.fx{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);
+  pointer-events:none;z-index:60;animation:fxFloat 1.8s ease-out forwards;font-size:1.2rem}
+
+/* ── SIDE PANEL ── */
+#panel{width:285px;flex-shrink:0;background:rgba(0,0,0,.3);backdrop-filter:blur(20px);
+  border-left:1px solid rgba(255,255,255,.1);display:flex;flex-direction:column;overflow:hidden}
+.ptabs{display:flex;border-bottom:1px solid rgba(255,255,255,.1);flex-shrink:0}
+.ptab{flex:1;padding:.48rem .2rem;text-align:center;color:rgba(255,255,255,.4);cursor:pointer;
+  font-weight:800;font-size:.65rem;transition:all .2s;border-bottom:3px solid transparent;letter-spacing:.3px}
+.ptab.on{color:#FFD93D;border-color:#FFD93D}
+.ptab:hover:not(.on){color:rgba(255,255,255,.7)}
+.pbody{flex:1;overflow-y:auto;padding:.65rem}
+.pbody::-webkit-scrollbar{width:3px}
+.pbody::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:2px}
+
+.res-card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:13px;
+  padding:.55rem;margin-bottom:.4rem;cursor:pointer;transition:all .2s}
+.res-card:hover{background:rgba(255,255,255,.15);transform:translateX(3px)}
+.res-card.sel{background:rgba(255,217,61,.12);border-color:rgba(255,217,61,.4)}
+.rc-row{display:flex;align-items:center;gap:.45rem}
+.rc-face{width:38px;height:38px;border-radius:50%;flex-shrink:0;border:2px solid rgba(255,255,255,.2);
+  position:relative;display:flex;align-items:center;justify-content:center;overflow:visible}
+.rc-hair{position:absolute;top:-7px;left:50%;transform:translateX(-50%);font-size:10px}
+.rc-mouth{font-size:8px}
+.rc-info{flex:1;min-width:0}
+.rc-name{color:white;font-weight:800;font-size:.83rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rc-traits{font-size:.63rem;color:rgba(255,255,255,.45);font-weight:600;margin-top:1px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rc-badges{display:flex;gap:.2rem;flex-wrap:wrap;margin-top:.3rem}
+.badge{font-size:.6rem;background:rgba(255,255,255,.1);padding:1px 5px;border-radius:7px;
+  color:rgba(255,255,255,.75);font-weight:700}
+.badge.h{background:rgba(107,203,119,.2);color:#6BCB77}
+.badge.s{background:rgba(255,107,107,.2);color:#FF6B6B}
+.badge.l{background:rgba(255,143,177,.2);color:#FF8FB1}
+
+.evt-item{background:rgba(255,255,255,.06);border-radius:9px;padding:.45rem .6rem;
+  margin-bottom:.3rem;border-left:3px solid #FFD93D;animation:slideL .4s ease-out}
+.evt-time{font-size:.6rem;color:rgba(255,255,255,.35);font-weight:600}
+.evt-txt{font-size:.71rem;color:rgba(255,255,255,.88);font-weight:600;margin-top:1px;line-height:1.4}
+
+.rel-item{display:flex;align-items:center;gap:.45rem;padding:.38rem .5rem;
+  background:rgba(255,255,255,.05);border-radius:9px;margin-bottom:.28rem}
+.rel-badge{font-size:.6rem;padding:2px 7px;border-radius:7px;font-weight:700;white-space:nowrap}
+.rb-l{background:rgba(255,143,177,.25);color:#FF8FB1}
+.rb-f{background:rgba(107,203,119,.25);color:#6BCB77}
+.rb-r{background:rgba(255,107,107,.25);color:#FF6B6B}
+.rel-names{color:white;font-size:.71rem;font-weight:700;flex:1;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ── BOTTOM BAR ── */
+#bot-bar{background:rgba(0,0,0,.4);backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,.1);
+  padding:.45rem 1rem;display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;gap:.4rem;flex-wrap:wrap}
+.hap-block{display:flex;align-items:center;gap:.45rem;color:white;font-weight:700;font-size:.78rem}
+.hap-track{width:80px;height:8px;background:rgba(255,255,255,.15);border-radius:4px;overflow:hidden}
+.hap-fill{height:100%;border-radius:4px;transition:width .6s;background:linear-gradient(90deg,#FFD93D,#6BCB77)}
+.act-btns{display:flex;gap:.35rem;flex-wrap:wrap}
+.abtn{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);color:white;
+  padding:.38rem .85rem;border-radius:16px;cursor:pointer;font-family:'Nunito';font-weight:700;
+  font-size:.76rem;transition:all .2s;display:flex;align-items:center;gap:.22rem}
+.abtn:hover{background:rgba(255,255,255,.22);transform:translateY(-2px)}
+.abtn:active{transform:scale(.96)}
+.abtn.y{background:rgba(255,217,61,.12);border-color:rgba(255,217,61,.35);color:#FFD93D}
+.abtn.g{background:rgba(107,203,119,.12);border-color:rgba(107,203,119,.35);color:#6BCB77}
+.abtn.p{background:rgba(255,143,177,.12);border-color:rgba(255,143,177,.35);color:#FF8FB1}
+.abtn.b{background:rgba(116,185,255,.12);border-color:rgba(116,185,255,.35);color:#74B9FF}
+.pop-info{color:rgba(255,255,255,.45);font-size:.73rem;font-weight:700;white-space:nowrap}
+
+/* ── MODAL ── */
+#modal-overlay{position:fixed;inset:0;z-index:500;display:none;align-items:center;
+  justify-content:center;background:rgba(0,0,0,.65);backdrop-filter:blur(8px);padding:1rem}
+#modal-overlay.on{display:flex}
+.mbox{background:linear-gradient(160deg,#2D3436,#1e272e);border-radius:22px;padding:1.4rem;
+  max-width:430px;width:100%;border:1px solid rgba(255,255,255,.1);box-shadow:var(--shadow-lg);
+  max-height:88vh;overflow-y:auto;animation:modalIn .33s cubic-bezier(.17,.67,.3,1.2)}
+.mbox::-webkit-scrollbar{width:4px}
+.mbox::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:2px}
+.mtitle{font-family:'Fredoka One';color:white;font-size:1.4rem;text-align:center;margin-bottom:1.1rem}
+.mclose{float:right;background:rgba(255,255,255,.1);border:none;color:white;
+  width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:.95rem;
+  display:flex;align-items:center;justify-content:center;transition:background .2s}
+.mclose:hover{background:rgba(255,255,255,.25)}
+.msec{margin-bottom:.9rem}
+.mlabel{color:rgba(255,255,255,.5);font-size:.7rem;font-weight:800;margin-bottom:.38rem;
+  text-transform:uppercase;letter-spacing:1px}
+.mopts{display:flex;gap:.3rem;flex-wrap:wrap}
+.mopt{background:rgba(255,255,255,.07);border:2px solid transparent;color:rgba(255,255,255,.75);
+  padding:.28rem .55rem;border-radius:9px;cursor:pointer;font-size:.7rem;font-weight:700;transition:all .2s}
+.mopt:hover{background:rgba(255,255,255,.15)}
+.mopt.sel{border-color:#FFD93D;background:rgba(255,217,61,.13);color:#FFD93D}
+.mcol{width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;
+  transition:all .2s;box-shadow:0 2px 5px rgba(0,0,0,.3)}
+.mcol:hover{transform:scale(1.15)}
+.mcol.sel{border-color:white;transform:scale(1.2)}
+.minput{width:100%;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.15);
+  color:white;padding:.5rem .7rem;border-radius:11px;font-family:'Nunito';font-size:.92rem;
+  font-weight:700;outline:none;transition:border-color .2s}
+.minput:focus{border-color:#FFD93D}
+.minput::placeholder{color:rgba(255,255,255,.28)}
+.prev-av{width:85px;height:85px;border-radius:50%;margin:0 auto .9rem;
+  border:4px solid rgba(255,255,255,.2);position:relative;display:flex;align-items:center;
+  justify-content:center;box-shadow:0 4px 18px rgba(0,0,0,.3)}
+.prev-hair{position:absolute;top:-12px;left:50%;transform:translateX(-50%);font-size:20px}
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:.28rem 0;
+  border-bottom:1px solid rgba(255,255,255,.05)}
+.stat-lbl{color:rgba(255,255,255,.5);font-size:.71rem;font-weight:600}
+.stat-track{width:80px;height:6px;background:rgba(255,255,255,.12);border-radius:3px;overflow:hidden}
+.stat-fill{height:100%;border-radius:3px;transition:width .6s}
+.btn-pri{width:100%;background:linear-gradient(135deg,#FFD93D,#FF6B6B);border:none;color:white;
+  padding:.7rem;border-radius:13px;cursor:pointer;font-family:'Fredoka One';font-size:1.1rem;
+  margin-top:.7rem;transition:all .2s;box-shadow:0 4px 18px rgba(255,107,107,.3)}
+.btn-pri:hover{transform:scale(1.03) translateY(-2px)}
+.btn-sec{background:rgba(255,255,255,.09);border:1.5px solid rgba(255,255,255,.18);color:white;
+  padding:.42rem .85rem;border-radius:11px;cursor:pointer;font-family:'Nunito';font-weight:700;font-size:.75rem;transition:all .2s}
+.btn-sec:hover{background:rgba(255,255,255,.2)}
+.btn-y{border-color:rgba(255,217,61,.4);color:#FFD93D;background:rgba(255,217,61,.08)}
+.btn-g{border-color:rgba(107,203,119,.4);color:#6BCB77;background:rgba(107,203,119,.08)}
+.btn-r{border-color:rgba(255,107,107,.4);color:#FF6B6B;background:rgba(255,107,107,.08)}
+.brow{display:flex;gap:.4rem;margin-top:.7rem;flex-wrap:wrap}
+
+/* Building menus */
+.bld-menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.8rem}
+.bld-menu-btn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+  color:white;padding:.6rem .5rem;border-radius:12px;cursor:pointer;font-family:'Nunito';
+  font-weight:700;font-size:.77rem;text-align:center;transition:all .2s;line-height:1.4}
+.bld-menu-btn:hover{background:rgba(255,255,255,.18);transform:translateY(-2px)}
+.bld-menu-btn .bm-icon{font-size:1.4rem;display:block;margin-bottom:.2rem}
+
+/* Shop items */
+.shop-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-top:.6rem}
+.shop-item{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);
+  border-radius:12px;padding:.55rem;cursor:pointer;transition:all .2s;text-align:center}
+.shop-item:hover{background:rgba(255,255,255,.18);transform:translateY(-2px)}
+.shop-item-img{width:52px;height:52px;border-radius:10px;object-fit:cover;margin:0 auto .3rem;display:block;
+  background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:1.8rem}
+.shop-item-name{font-size:.72rem;font-weight:700;color:white;margin-bottom:.1rem}
+.shop-item-price{font-size:.65rem;color:#FFD93D;font-weight:800}
+.shop-add-form{background:rgba(255,255,255,.05);border:1px dashed rgba(255,255,255,.2);
+  border-radius:12px;padding:.8rem;margin-top:.6rem}
+
+/* Occupants list */
+.occ-list{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem}
+.occ-pill{display:flex;align-items:center;gap:.3rem;background:rgba(255,255,255,.1);
+  border-radius:20px;padding:.25rem .6rem;font-size:.72rem;font-weight:700;color:white;cursor:pointer;
+  border:1px solid rgba(255,255,255,.15);transition:all .2s}
+.occ-pill:hover{background:rgba(255,255,255,.22)}
+.occ-av-dot{width:10px;height:10px;border-radius:50%}
+
+/* ── MINI GAME ── */
+#mg-overlay{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.9);
+  display:none;flex-direction:column;align-items:center;justify-content:center}
+#mg-overlay.on{display:flex}
+.mg-title{font-family:'Fredoka One';color:#FFD93D;font-size:2rem;margin-bottom:.2rem}
+.mg-score{font-family:'Fredoka One';font-size:2.6rem;color:#FFD93D}
+.mg-combo{color:#FF6B6B;font-weight:800;font-size:.95rem;height:1.3rem;text-align:center}
+.beat-track{display:flex;gap:12px;margin:1.3rem 0}
+.bzone{width:65px;height:65px;border-radius:15px;display:flex;align-items:center;
+  justify-content:center;font-size:1.7rem;cursor:pointer;transition:all .12s;border:3px solid;
+  background:rgba(255,255,255,.04);user-select:none}
+.mg-timer-wrap{width:170px;height:7px;background:rgba(255,255,255,.15);border-radius:4px;overflow:hidden;margin:0 auto .8rem}
+.mg-timer-fill{height:100%;background:linear-gradient(90deg,#6BCB77,#FFD93D);border-radius:4px}
+.mg-msg{color:rgba(255,255,255,.55);font-size:.82rem;font-weight:700;height:1.4rem;text-align:center}
+
+/* ── NOTIFS ── */
+#notifs{position:fixed;top:62px;right:10px;z-index:400;display:flex;flex-direction:column;
+  gap:.35rem;pointer-events:none;max-width:220px}
+.notif{background:rgba(255,255,255,.97);border-radius:13px;padding:.45rem .8rem;
+  box-shadow:var(--shadow);animation:notifIn .4s ease-out;font-size:.73rem;font-weight:700;
+  color:#2D3436;display:flex;align-items:center;gap:.4rem;border-left:4px solid #FFD93D;line-height:1.35}
+.notif.out{animation:notifOut .4s ease-in forwards}
+
+/* ── ANIMS ── */
+@keyframes floatSlow{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+@keyframes twinkle{0%,100%{opacity:.15;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+@keyframes cloudDrift{0%{transform:translateX(-220px)}100%{transform:translateX(calc(100vw + 220px))}}
+@keyframes waveMove{0%{transform:translateX(0)}100%{transform:translateX(50%) translateY(6px)}}
+@keyframes legSwing{0%{transform:rotate(-18deg)}100%{transform:rotate(18deg)}}
+@keyframes armSwingL{0%{transform:rotate(20deg)}100%{transform:rotate(-15deg)}}
+@keyframes armSwingR{0%{transform:rotate(-15deg)}100%{transform:rotate(20deg)}}
+@keyframes moodPop{0%{transform:translateX(-50%) scale(0)}70%{transform:translateX(-50%) scale(1.2)}100%{transform:translateX(-50%) scale(1)}}
+@keyframes bubbleIn{0%{transform:translateX(-50%) scale(0);opacity:0}70%{transform:translateX(-50%) scale(1.06)}100%{transform:translateX(-50%) scale(1);opacity:1}}
+@keyframes fxFloat{0%{transform:translateX(-50%) translateY(0);opacity:1}100%{transform:translateX(-50%) translateY(-52px);opacity:0}}
+@keyframes slideL{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+@keyframes modalIn{0%{transform:scale(.88) translateY(18px);opacity:0}100%{transform:scale(1) translateY(0);opacity:1}}
+@keyframes notifIn{from{opacity:0;transform:translateX(32px)}to{opacity:1;transform:translateX(0)}}
+@keyframes notifOut{from{opacity:1}to{opacity:0;transform:translateX(32px)}}
+@keyframes winGlow{0%,100%{opacity:.5}50%{opacity:.85}}
+@keyframes walkBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes pulse{0%,100%{box-shadow:0 6px 25px rgba(255,107,107,.5),0 0 0 0 rgba(255,107,107,.3)}50%{box-shadow:0 6px 25px rgba(255,107,107,.5),0 0 0 10px rgba(255,107,107,0)}}
+
+@media(max-width:640px){#panel{display:none}}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ SETUP SCREEN ═══════════════ -->
+<div id="setup">
+  <div class="setup-stars" id="setup-stars"></div>
+  <div class="setup-island">🏝️</div>
+  <div class="setup-title">ÎLE BONHEUR</div>
+  <div class="setup-sub">✨ Simulation Sociale ✨</div>
+  <div class="setup-card">
+    <div class="setup-label">Nom de votre île</div>
+    <input class="setup-input" id="island-name-input" placeholder="Ex: Île Paradis, Bonheurville…" maxlength="28">
+    <div class="setup-label">Mode de dialogue</div>
+    <div class="setup-mode-label">Choisissez le ton des conversations générées par l'IA</div>
+    <div class="mode-toggle">
+      <div class="mode-btn sel" id="mode-safe" onclick="selectMode('safe')">🌈 Tout public<br><span style="font-size:.65rem;font-weight:600;opacity:.7">Humour léger &amp; absurde</span></div>
+      <div class="mode-btn" id="mode-adult" onclick="selectMode('adult')">🔞 Adulte<br><span style="font-size:.65rem;font-weight:600;opacity:.7">Contenu -18 activé</span></div>
+    </div>
+    <button class="setup-btn" onclick="launchGame()">🎮 Commencer l'aventure !</button>
+  </div>
+</div>
+
+<!-- ═══════════════ MAIN GAME ═══════════════ -->
+<div id="game">
+  <!-- TOP BAR -->
+  <div id="top-bar">
+    <div class="top-logo" id="island-title" onclick="openIslandSettings()">🏝️ Mon Île</div>
+    <div id="clock"><span id="clock-icon">☀️</span><span id="clock-txt">Lundi 08:00</span></div>
+    <div class="top-acts">
+      <div id="mode-ind" class="mode-indicator safe">🌈 Tout public</div>
+      <button class="tbtn accent" onclick="openCreator()">➕ Créer perso</button>
+      <button class="tbtn" onclick="fireEvent()">🎲 Événement</button>
+      <button class="tbtn" onclick="openMG()">🎮 Mini-Jeu</button>
+      <button class="tbtn" onclick="saveGame()" title="Sauvegarder">💾</button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div id="content">
+    <!-- ISLAND -->
+    <div id="island" onclick="islandBgClick()">
+      <div id="sky" class="day"></div>
+      <div id="night-stars"></div>
+      <div id="sun-moon"></div>
+      <div id="clouds"></div>
+      <div id="water"><div class="wave" style="animation-duration:6s"></div><div class="wave" style="animation-duration:9s;top:-7px;opacity:.1"></div></div>
+      <div id="ground"></div>
+      <div id="deco-layer"></div>
+      <div id="bld-layer"></div>
+      <div id="av-layer"></div>
+    </div>
+    <!-- SIDE PANEL -->
+    <div id="panel">
+      <div class="ptabs">
+        <div class="ptab on" id="ptab-res" onclick="switchTab('res')">👥 Habitants</div>
+        <div class="ptab" id="ptab-evt" onclick="switchTab('evt')">📰 Actus</div>
+        <div class="ptab" id="ptab-rel" onclick="switchTab('rel')">💞 Liens</div>
+      </div>
+      <div class="pbody" id="pb-res"></div>
+      <div class="pbody" id="pb-evt" style="display:none"></div>
+      <div class="pbody" id="pb-rel" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM BAR -->
+  <div id="bot-bar">
+    <div class="hap-block">
+      <span>😊</span><span style="font-weight:800">Bonheur</span>
+      <div class="hap-track"><div class="hap-fill" id="hap-fill" style="width:60%"></div></div>
+      <span id="hap-pct">60%</span>
+    </div>
+    <div class="act-btns">
+      <button class="abtn y" onclick="doFestival()"><span>🎉</span><span>Fête</span></button>
+      <button class="abtn g" onclick="doPeace()"><span>🕊️</span><span>Paix</span></button>
+      <button class="abtn p" onclick="doLove()"><span>💕</span><span>Amour</span></button>
+      <button class="abtn b" onclick="doGift()"><span>🎁</span><span>Cadeau</span></button>
+    </div>
+    <div class="pop-info" id="pop-info">👥 0 habitant</div>
+  </div>
+</div>
+
+<!-- NOTIFS -->
+<div id="notifs"></div>
+
+<!-- MODAL -->
+<div id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="mbox" id="mbox"></div>
+</div>
+
+<!-- MINI GAME -->
+<div id="mg-overlay">
+  <div class="mg-title">🎵 RHYTHM ISLAND</div>
+  <div style="color:rgba(255,255,255,.5);font-size:.8rem;margin-bottom:.8rem">Tapez les cases illuminées !</div>
+  <div class="mg-score" id="mg-score">0</div>
+  <div class="mg-combo" id="mg-combo"></div>
+  <div class="mg-timer-wrap"><div class="mg-timer-fill" id="mg-tf" style="width:100%"></div></div>
+  <div class="beat-track" id="beat-track"></div>
+  <div class="mg-msg" id="mg-msg">Prêt…</div>
+  <button onclick="closeMG()" style="margin-top:1.2rem;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:white;padding:.45rem 1.6rem;border-radius:18px;cursor:pointer;font-family:'Nunito';font-weight:700">Fermer 🏝️</button>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  CONSTANTS
+// ══════════════════════════════════════════════════════
+const ALL_TRAITS = [
+  'Timide','Drôle','Ambitieux','Paresseux','Romantique','Grognon',
+  'Curieux','Mystérieux','Optimiste','Jaloux','Créatif','Gourmand',
+  'Sportif','Bavard','Sérieux','Flirteur','Philosophe','Anxieux',
+  'Courageux','Manipulateur','Bienveillant','Narcissique','Poète','Geek'
+];
+const GOOD_MOODS = ['😊','😄','😍','🤩','😂','🤗','😇','🥳'];
+const ALL_MOODS  = ['😊','😄','😍','🤩','😴','😤','🥺','😂','🤔','😎','🥳','😡','🤗','😇','😏','🙄'];
+const SKIN_COLORS  = ['#FDBCB4','#E8A887','#C8763A','#8D5524','#FFCBA4','#F1C27D','#FFE0BD','#D4956A','#5C3317'];
+const HAIR_COLORS  = ['#2D3436','#F9CA24','#E17055','#A29BFE','#55EFC4','#FD79A8','#FDCB6E','#636E72','#FF6B6B','#6BCB77','#74B9FF','#ffffff'];
+const SHIRT_COLORS = ['#FF6B6B','#FFD93D','#6BCB77','#4ECDC4','#A29BFE','#FF8FB1','#74B9FF','#FFA552','#2D3436','#E17055','#00CEC9','#6C5CE7'];
+const PANT_COLORS  = ['#2D3436','#636E72','#0984E3','#6C5CE7','#2c3e50','#1e3799','#4a4a4a','#8B4513'];
+const SHOE_COLORS  = ['#2D3436','#FFFFFF','#FF6B6B','#FFD93D','#6BCB77','#A29BFE'];
+const HAIR_STYLES  = ['Courte','Longue','Bouclée','Chauve','Tresses','Mohawk','Queue de cheval','Afro','Pixie','Undercut'];
+const FACE_SHAPES  = ['Ronde','Ovale','Carrée','Cœur','Allongée'];
+const DAYS = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+const HAIR_EMOJI = {Courte:'⬛',Longue:'🦰',Bouclée:'🦱',Chauve:'',Tresses:'🪡',Mohawk:'⚡','Queue de cheval':'🎀',Afro:'🌑',Pixie:'🔷',Undercut:'🔳'};
+const MOUTH_EMOJI = {'😊':'🙂','😄':'😁','😍':'😚','🤩':'😝','😴':'😪','😤':'😬','🥺':'😕','😂':'😄','🤔':'😑','😎':'😏','🥳':'😛','😡':'😣','🤗':'😊','😇':'🙂','😏':'😏','🙄':'🙄'};
+
+const NAMES = ['Léa','Tom','Yuki','Marco','Zara','Jules','Mia','Axel','Luna','Enzo','Nora','Théo','Cléo','Ryo','Iris','Sam','Kira','Max','Zoé','Luca','Aiko','Fab','Nina','Ren','Jade','Sasha','Alex','Camille','Dylan','Emma'];
+
+// Dialogue fallbacks by trait (much expanded)
+const TRAIT_DIALOGUES = {
+  Timide:["Euh… bonjour ?","C'est moi ou c'est gênant ?","Je… j'ai rien dit.","Peut-être que je devrais partir ?","Oh non quelqu'un me regarde…","Je suis là. Un peu.","C'est quoi une conversation déjà ?","*regarde ses chaussures*"],
+  Drôle:["Pourquoi les pieuvres portent des chaussettes ?","Ha ha ! Je sais même pas pourquoi.","J'ai inventé le rire. De rien.","L'ananas sur la pizza, c'est de l'art.","Trois canards entrent dans un bar... non c'est trop long.","Mon humour est en avance sur son temps. D'environ 40 ans.","*fait une blague. Personne rit. Rit quand même.*"],
+  Ambitieux:["Je serai maire dans 3 ans. Ou demain.","Mon plan est en marche. Muwahahaha.","Le succès m'attend. Il peut patienter.","Chaque seconde perdue est une défaite.","J'ai un tableau Excel de mes ambitions.","Étape 1 : île. Étape 2 : monde. Étape 3 : galaxie."],
+  Paresseux:["Zzz… quoi ? Non.","Trop d'efforts. Je rentre.","Le canapé me manque déjà.","Peut-être demain. Ou après-demain.","Je ferai ça… un jour.","Bouger c'est bien en théorie.","*dort debout*"],
+  Romantique:["La vie est un poème. Et toi une strophe.","Mon cœur chante la mélodie de l'amour.","*soupir romantique au ralenti*","Les étoiles sont belles. Mais moins que toi.","Chaque coucher de soleil me fait penser à... l'amour.","J'ai écrit 47 lettres d'amour ce matin."],
+  Grognon:["C'est quoi ce bruit ?!","Tout le monde m'énerve. Surtout moi.","En 1842, c'était mieux.","NON.","Encore cette musique…","Qui a mangé mes biscuits ?! ENCORE ?!","Je suis souriant. De l'intérieur."],
+  Curieux:["Mais… POURQUOI exactement ?","Et si les palmiers avaient des sentiments ?","Fascinant ! Encore !","J'ai 47 questions. Commençons.","Comment ça marche un flamant rose ?","Et si on était dans une simulation… de simulation ?"],
+  Mystérieux:["Je sais des choses. Des choses.","...","Je suis partout et nulle part.","*disparaît dans le brouillard*","Certaines vérités ne se disent pas à voix haute.","Le secret, c'est qu'il n'y a pas de secret."],
+  Optimiste:["Tout va super bien ! Probablement !","Le soleil brille. Même la nuit.","Yay ! Pour l'éternité !","C'est merveilleux d'être ici !","Même les cactus sont doux si on les regarde avec amour.","Chaque problème est une opportunité déguisée en catastrophe."],
+  Jaloux:["Pourquoi toi et pas moi ?!","C'est NUL. (j'adore secrètement)","Hmph. Chanceux.","Pfff. Facile.","Ah oui très bien pour TOI.","Je suis content(e). Vraiment. (non)"],
+  Créatif:["Et si l'île était un tableau ?","J'ai dessiné 37 poissons ce matin.","L'art c'est ma vie. Et le sable.","Ma prochaine œuvre : une sculpture de crabe.","La beauté est partout sauf dans mon agenda.","Inspiration : UN PALMIER. Génie."],
+  Gourmand:["J'ai faim. Encore.","Quelqu'un a vu des mangues ?","La nourriture c'est la vraie culture.","*mange en marchant*","La meilleure médecine c'est un gâteau.","J'ai rêvé d'une pizza cette nuit. Encore."],
+  Sportif:["Allez, on bouge !","Repos c'est pour les faibles. Ou les sages.","Mon record personnel : 42 pompes en pyjama.","L'endorphine c'est ma drogue légale préférée.","Cardio ? J'appelle ça danser avec la mort."],
+  Bavard:["Ah tu sais quoi ? Non attends, j'ai mieux.","J'ai tellement de choses à dire, genre TELLEMENT.","Bref, pour revenir à ce que je disais il y a 20 minutes…","Le silence ça m'angoisse alors je parle. Tu vois ? Comme là.","J'adore les conversations. Surtout quand c'est moi qui parle."],
+  Sérieux:["Je ne plaisante pas.","Ce n'est pas le moment.","Analysons la situation calmement.","Il y a 3 options. Aucune n'est drôle.","L'humour est une réponse inappropriée."],
+  Flirteur:["Tu as un sourire qui dévaste les îles.","Oh là là… bonjour.","Est-ce que tu viens souvent sur cette plage ?","Je parie que tu es encore plus beau/belle de près.","Mon cœur ? Il t'appartient. Pour l'instant."],
+  Philosophe:["Qu'est-ce que le bonheur, vraiment ?","Exister c'est résister. Ou pas.","Le temps n'est qu'une illusion de palmier.","Si un arbre tombe sur l'île et que personne... tu vois ?","Descartes aurait adoré cette île. Ou détesté."],
+  Anxieux:["Et si ça se passe mal ?","J'ai prévu 12 plans de secours.","Est-ce que j'ai bien fermé la porte ?","Tout va bien. NON ça va pas. Si. Non.","*respire dans un sac en papier*"],
+  Courageux:["Je n'ai peur de rien ! (ou presque)","En avant ! Quoi que ce soit.","Les obstacles sont des trampolines.","Veni, vidi, j'ai quand même un peu paniqué."],
+  Manipulateur:["Bien sûr que c'est pour ton bien.","Tu as tellement raison. *note mentalement l'inverse*","Laisse-moi t'expliquer pourquoi tu as tort avec bienveillance.","Je suis tellement innocent que c'en est suspect."],
+  Bienveillant:["Comment tu vas toi ? Non vraiment ?","Je ferai n'importe quoi pour t'aider.","Tu as l'air fatigué(e). Mange quelque chose.","Mon bonheur c'est le tien. Littéralement."],
+  Narcissique:["As-tu remarqué à quel point je suis brillant(e) ?","Le miroir et moi on est amis.","Mon meilleur ami ? Moi-même.","Je suis limité(e) en édition. Collectionne-moi."],
+  Poète:["L'horizon pleure des flamants roses / Et mon âme tangue sous les vagues.","Un palmier. Deux palmiers. Un haïku naît.","Les mots sont des oiseaux qui s'envolent vers toi.","La mer dit des choses que je comprends à moitié."],
+  Geek:["Attends je dois finish ce niveau.","Le Wi-Fi de l'île est à 3 bars. Intolérable.","J'ai calculé la probabilité de cet événement : 0.0047%.","Ce palmier ressemble à un boss final."],
+};
+
+// Adult dialogues (18+)
+const ADULT_DIALOGUES = [
+  (a,b,c) => `${a} suggère à ${b} un plan à 3 avec ${c||'quelqu\'un de mystérieux'}… 👀`,
+  (a,b) => `${a} envoie un message très suggestif à ${b} à 2h du matin 😏`,
+  (a,b) => `${a} et ${b} disparaissent derrière un palmier pendant 20 minutes suspicieuses 🌴`,
+  (a,b) => `${a} dit à ${b} que ses yeux ne sont pas la seule chose qu'il/elle admire 😈`,
+  (a,b,c) => `${a}, ${b} et ${c||'une personne anonyme'} organisent une soirée "thématique" très privée 🔥`,
+  (a,b) => `${a} propose à ${b} un jeu de rôle dont personne ne parlera jamais publiquement 🎭`,
+  (a,b) => `${a} laisse un message vocal à ${b} à 3h du matin. Le contenu est censuré. 📱`,
+  (a,b,c) => `${a} confie à ${b} ses sentiments pour ${c||'quelqu\'un'} qui sont… disons, très physiques 💋`,
+  (a,b) => `${a} et ${b} partagent un bain de minuit. Sans surveillance. 🌊`,
+  (a,b) => `${a} achète à ${b} un "cadeau spécial" de la boutique. La livraison est discrète. 📦`,
+];
+
+// Random events
+const RANDOM_EVENTS = [
+  g => { const [a,b]=two(g); const r=grel(g,a,b); r.type='rival';r.score=Math.max(0,r.score-28);a.mood='😡';b.mood='😤'; return {i:'😤',t:`${a.name} et ${b.name} se disputent à propos d'un ananas sur la pizza !`}; },
+  g => { const [a,b]=two(g); const r=grel(g,a,b); r.type='love';r.score=Math.min(100,r.score+45);a.mood='😍';b.mood='😍'; return {i:'💕',t:`Coup de foudre entre ${a.name} et ${b.name} pendant le festival de homards !`,fx:'heart',tgts:[a,b]}; },
+  g => { const a=rnd(g.residents); a.happiness=Math.min(100,a.happiness+28);a.mood='🥳'; return {i:'🎉',t:`${a.name} organise une fête de crêpes surprise sur la plage !`}; },
+  g => { const [a,b]=two(g); const r=grel(g,a,b); r.type='friend';r.score=Math.min(100,r.score+22);a.mood='😄';b.mood='😊'; return {i:'💚',t:`${a.name} et ${b.name} deviennent amis en débattant de la meilleure glace !`}; },
+  g => { const a=rnd(g.residents); a.energy=Math.max(0,a.energy-32);a.mood='😴'; return {i:'😴',t:`${a.name} s'endort debout au milieu de l'île. Encore.`}; },
+  g => { const a=rnd(g.residents); a.mood='🤩';a.happiness=Math.min(100,a.happiness+18); return {i:'🌟',t:`${a.name} découvre qu'il/elle peut parler aux flamants roses !`}; },
+  g => { const [a,b]=two(g); a.mood='😂';b.mood='😂';a.social=Math.min(100,a.social+15); return {i:'😂',t:`${a.name} fait rire ${b.name} aux larmes avec une blague de crab dansant !`}; },
+  g => { const a=rnd(g.residents); a.happiness=Math.max(0,a.happiness-18);a.mood='🥺'; return {i:'🥺',t:`${a.name} apprend que le café est épuisé. Catastrophe nationale.`}; },
+  g => { const [a,b]=two(g); const r=grel(g,a,b); if(r.type==='love'){r.type='neutral';r.score=30;} a.mood='😤';b.mood='🥺'; return {i:'💔',t:`${a.name} et ${b.name} se séparent. Motif : désaccord sur les ananas.`}; },
+  g => { const a=rnd(g.residents); a.energy=Math.min(100,a.energy+38);a.mood='🤗'; return {i:'⚡',t:`${a.name} boit 5 cafés et court sur l'île en chantant !`}; },
+  g => { const [a,b,c]=three(g); if(c){ return {i:'🎭',t:`${a.name}, ${b.name} et ${c.name} montent une pièce de théâtre improvisée. C'est du grand n'importe quoi.`}; } return {i:'🎭',t:`${a.name} monte une pièce solo. Ovation du cocotier.`}; },
+  g => { const a=rnd(g.residents); a.mood='🤔'; return {i:'💡',t:`${a.name} a une idée révolutionnaire pour améliorer l'île. C'est… une boîte à lettres en forme de crabe.`}; },
+];
+
+// Adult random events
+const ADULT_EVENTS = [
+  g => { const [a,b,c]=three(g); const names=[a.name,b.name,c?c.name:'quelqu\'un']; return {i:'🔥',t:ADULT_DIALOGUES[0](names[0],names[1],names[2])}; },
+  g => { const [a,b]=two(g); return {i:'😏',t:ADULT_DIALOGUES[1](a.name,b.name)}; },
+  g => { const [a,b]=two(g); return {i:'🌴',t:ADULT_DIALOGUES[2](a.name,b.name)}; },
+  g => { const [a,b,c]=three(g); return {i:'🎭',t:ADULT_DIALOGUES[4](a.name,b.name,c?c.name:null)}; },
+  g => { const [a,b]=two(g); return {i:'💋',t:ADULT_DIALOGUES[5](a.name,b.name)}; },
+  g => { const [a,b]=two(g); return {i:'🌊',t:ADULT_DIALOGUES[8](a.name,b.name)}; },
+];
+
+// Buildings definition
+const BUILDINGS = [
+  {id:'cafe',  x:5,  w:82,h:100,color:'#FFD93D',name:'Café Tropique',  icon:'☕',  functions:['chat','event','boost']},
+  {id:'shop',  x:17, w:90,h:108,color:'#FF6B6B',name:'Boutique Île',   icon:'🛒',  functions:['shop','gift']},
+  {id:'mairie',x:30, w:95,h:115,color:'#A29BFE',name:'Mairie',         icon:'🏛️', functions:['event','rename','marry']},
+  {id:'park',  x:46, w:75,h:88, color:'#6BCB77',name:'Parc',           icon:'🌳',  functions:['relax','date','chat']},
+  {id:'school',x:59, w:78,h:95, color:'#4ECDC4',name:'École',          icon:'📚',  functions:['learn','quiz','chat']},
+  {id:'salon', x:72, w:70,h:88, color:'#FF8FB1',name:'Salon Beauté',   icon:'💇',  functions:['style','chat']},
+  {id:'gym',   x:83, w:72,h:90, color:'#FFA552',name:'Gym Île',        icon:'🏋️', functions:['sport','chat','boost']},
+];
+
+// Shop items storage
+let shopItems = JSON.parse(localStorage.getItem('ib_shop')||'[]');
+if(!shopItems.length){
+  shopItems=[
+    {id:'s1',name:'Smoothie Mangue',emoji:'🥭',price:10,desc:'Boost bonheur +15'},
+    {id:'s2',name:'Chapeau Tropical',emoji:'👒',price:25,desc:'Style +∞'},
+    {id:'s3',name:'Pizza Ananas',emoji:'🍕',price:15,desc:'Controverse garantie'},
+    {id:'s4',name:'Bouquet de Fleurs',emoji:'💐',price:20,desc:'Relation +20'},
+    {id:'s5',name:'Café XL',emoji:'☕',price:8,desc:'Énergie +25'},
+    {id:'s6',name:'Livre Mystère',emoji:'📚',desc:'Curiosité +10',price:12},
+  ];
+}
+
+// ══════════════════════════════════════════════════════
+//  GAME STATE
+// ══════════════════════════════════════════════════════
+let G = {
+  islandName: 'Mon Île',
+  adultMode: false,
+  residents: [],
+  events: [],
+  relations: [],
+  happiness: 60,
+  time: {day:1, hour:8, min:0},
+  tick: 0,
+  selectedId: null,
+  // Building occupants: {buildingId: [residentId, ...]}
+  occupants: {},
+};
+
+// ══════════════════════════════════════════════════════
+//  UTILITIES
+// ══════════════════════════════════════════════════════
+const R  = a => a[Math.floor(Math.random()*a.length)];
+const RN = (lo,hi) => Math.floor(Math.random()*(hi-lo+1))+lo;
+const uid= () => Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
+const hairEmoji = s => HAIR_EMOJI[s]||'';
+const mouthEmoji= m => MOUTH_EMOJI[m]||'🙂';
+
+function rnd(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function two(g){
+  const s=[...g.residents].sort(()=>Math.random()-.5);
+  return [s[0],s[1]||s[0]];
+}
+function three(g){
+  const s=[...g.residents].sort(()=>Math.random()-.5);
+  return [s[0],s[1]||s[0],s[2]||null];
+}
+function grel(g,a,b){
+  let r=g.relations.find(r=>(r.a===a.id&&r.b===b.id)||(r.b===a.id&&r.a===b.id));
+  if(!r){r={id:uid(),a:a.id,b:b.id,type:'neutral',score:50};g.relations.push(r);}
+  return r;
+}
+function getRelations(g,resId){
+  return g.relations.filter(r=>r.a===resId||r.b===resId);
+}
+function otherInRel(g,rel,resId){
+  const id=rel.a===resId?rel.b:rel.a;
+  return g.residents.find(r=>r.id===id);
+}
+
+// ══════════════════════════════════════════════════════
+//  SETUP SCREEN
+// ══════════════════════════════════════════════════════
+let setupMode = 'safe';
+function selectMode(m){
+  setupMode=m;
+  document.getElementById('mode-safe').className='mode-btn'+(m==='safe'?' sel':'');
+  document.getElementById('mode-adult').className='mode-btn'+(m==='adult'?' sel':'');
+}
+
+// Build splash stars
+(function(){
+  const c=document.getElementById('setup-stars');
+  for(let i=0;i<90;i++){
+    const s=document.createElement('div');const sz=RN(1,3);
+    s.className='star';
+    s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;animation-duration:${2+Math.random()*3}s;animation-delay:${Math.random()*4}s`;
+    c.appendChild(s);
+  }
+})();
+
+function launchGame(){
+  const nameVal=document.getElementById('island-name-input').value.trim();
+  G.islandName = nameVal || 'Île Bonheur';
+  G.adultMode = (setupMode==='adult');
+  document.getElementById('setup').classList.add('hidden');
+  setTimeout(()=>{
+    document.getElementById('setup').style.display='none';
+    document.getElementById('game').className='visible';
+    initGame();
+  },700);
+}
+
+// ══════════════════════════════════════════════════════
+//  SAVE / LOAD
+// ══════════════════════════════════════════════════════
+function saveGame(){
+  localStorage.setItem('ile_bonheur_v3',JSON.stringify({G,shopItems}));
+  notify('💾','Partie sauvegardée !');
+}
+function loadGame(){
+  try{
+    const d=JSON.parse(localStorage.getItem('ile_bonheur_v3'));
+    if(d){Object.assign(G,d.G);if(d.shopItems)shopItems=d.shopItems;return true;}
+  }catch(e){}
+  return false;
+}
+
+// ══════════════════════════════════════════════════════
+//  RESIDENT FACTORY
+// ══════════════════════════════════════════════════════
+function makeResident(name,opts={}){
+  const traits = opts.traits || [R(ALL_TRAITS)];
+  return {
+    id: uid(),
+    name: name||R(NAMES),
+    traits, // ARRAY of traits
+    skin:  opts.skin  || R(SKIN_COLORS),
+    hair:  opts.hair  || R(HAIR_COLORS),
+    shirt: opts.shirt || R(SHIRT_COLORS),
+    pants: opts.pants || R(PANT_COLORS),
+    shoes: opts.shoes || R(SHOE_COLORS),
+    hairStyle: opts.hairStyle || R(HAIR_STYLES),
+    faceShape: opts.faceShape || R(FACE_SHAPES),
+    mood: R(GOOD_MOODS),
+    happiness: RN(45,80),
+    energy: RN(50,90),
+    social: RN(20,80),
+    x: RN(5,85), y: RN(0,6),
+    dirX: Math.random()>.5?1:-1,
+    speed: 0.06+Math.random()*.1,
+    movePause: 0,
+    indoor: null, // building id if inside
+    showMood: false,
+  };
+}
+
+// ══════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════
+function initGame(){
+  const loaded = loadGame();
+  if(!loaded){
+    // No starter characters — player must create them
+    addEvent('🌅 Bienvenue sur '+G.islandName+' ! L\'île est vide. Créez vos premiers habitants !');
+    addEvent('💡 Cliquez sur ➕ Créer perso pour ajouter des personnages !');
+  }
+  updateIslandTitle();
+  updateModeIndicator();
+  renderScene();
+  renderAllAvatars();
+  refreshStats();
+  renderResPanel();
+  renderEvtPanel();
+  renderRelPanel();
+  notify('🏝️','Bienvenue sur '+G.islandName+' !');
+  if(!loaded) setTimeout(()=>notify('💡','Aucun habitant ! Créez vos premiers personnages ➕'),2000);
+  setInterval(saveGame,180000);
+  setInterval(gameLoop,200);
+}
+
+function updateIslandTitle(){
+  const el=document.getElementById('island-title');
+  if(el) el.textContent='🏝️ '+G.islandName;
+  document.title='🏝️ '+G.islandName;
+}
+function updateModeIndicator(){
+  const el=document.getElementById('mode-ind');
+  if(!el)return;
+  if(G.adultMode){el.textContent='🔞 Mode Adulte';el.className='mode-indicator';}
+  else{el.textContent='🌈 Tout public';el.className='mode-indicator safe';}
+}
+
+// ══════════════════════════════════════════════════════
+//  SCENE RENDERING
+// ══════════════════════════════════════════════════════
+function renderScene(){
+  renderSky();
+  renderClouds();
+  renderDeco();
+  renderBuildings();
+}
+
+function renderSky(){
+  const h=G.time.hour;
+  const sky=document.getElementById('sky');
+  const stars=document.getElementById('night-stars');
+  const sm=document.getElementById('sun-moon');
+  if(h>=6&&h<18){
+    sky.className='day';stars.className='';
+    sm.textContent='☀️';
+    const p=(h-6)/12;
+    sm.style.left=(8+p*82)+'%';
+    sm.style.top=(43-Math.sin(p*Math.PI)*32)+'%';
+    sm.style.filter='drop-shadow(0 0 22px rgba(255,220,50,.9))';
+  } else if(h>=18&&h<21){
+    sky.className='sunset';stars.className='';
+    sm.textContent='🌅';sm.style.left='85%';sm.style.top='38%';
+    sm.style.filter='drop-shadow(0 0 18px rgba(255,100,50,.8))';
+  } else {
+    sky.className='night';stars.className='on';
+    sm.textContent='🌙';
+    const p=h>=21?(h-21)/3:(h+3)/3;
+    sm.style.left=(8+p*82)+'%';sm.style.top=(43-Math.sin(p*Math.PI)*28)+'%';
+    sm.style.filter='drop-shadow(0 0 22px rgba(200,220,255,.8))';
+    if(!document.getElementById('night-stars').hasChildNodes()){
+      for(let i=0;i<80;i++){
+        const s=document.createElement('div');const sz=RN(1,3);
+        s.style.cssText=`position:absolute;border-radius:50%;background:white;width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*42}%;animation:twinkle ${2+Math.random()*3}s ${Math.random()*4}s ease-in-out infinite`;
+        document.getElementById('night-stars').appendChild(s);
+      }
+    }
+  }
+  document.getElementById('clock-icon').textContent=h>=6&&h<20?'☀️':h>=20?'🌙':'🌅';
+}
+
+function renderClouds(){
+  const el=document.getElementById('clouds');
+  if(el.hasChildNodes())return;
+  [{top:'8%',w:110,del:0,dur:28},{top:'13%',w:80,del:10,dur:38},{top:'4%',w:140,del:18,dur:22},{top:'19%',w:62,del:4,dur:45}].forEach(d=>{
+    const c=document.createElement('div');c.className='cloud';
+    c.style.cssText=`top:${d.top};animation-duration:${d.dur}s;animation-delay:-${d.del}s`;
+    const w=d.w,h=Math.round(w*.55);
+    c.innerHTML=`<div style="position:relative;width:${w}px;height:${h}px">
+      <div style="position:absolute;width:${Math.round(w*.55)}px;height:${Math.round(h*.9)}px;border-radius:50%;background:rgba(255,255,255,.85);top:0;left:${Math.round(w*.18)}px"></div>
+      <div style="position:absolute;width:${Math.round(w*.4)}px;height:${Math.round(h*.7)}px;border-radius:50%;background:rgba(255,255,255,.85);top:${Math.round(h*.1)}px;left:0"></div>
+      <div style="position:absolute;width:${w}px;height:${Math.round(h*.45)}px;border-radius:${Math.round(h*.22)}px;background:rgba(255,255,255,.85);bottom:0;left:0"></div></div>`;
+    el.appendChild(c);
+  });
+}
+
+function renderDeco(){
+  const el=document.getElementById('deco-layer');
+  if(el.hasChildNodes())return;
+  const items=['🌴','🌺','🌸','🌻','🌿','🦜','🦩','🌵','⭐','🍃'];
+  for(let i=0;i<12;i++){
+    const d=document.createElement('span');
+    const x=RN(1,92),sz=.9+Math.random()*1.1;
+    d.style.cssText=`position:absolute;left:${x}%;bottom:${RN(0,4)}%;font-size:${sz}rem;animation:floatSlow ${3+Math.random()*2}s ${Math.random()*3}s ease-in-out infinite`;
+    d.textContent=R(items);el.appendChild(d);
+  }
+  for(let i=0;i<4;i++){
+    const f=document.createElement('span');
+    f.style.cssText=`position:absolute;bottom:-${RN(5,20)}%;left:${RN(5,90)}%;font-size:${.8+Math.random()*.7}rem;animation:cloudDrift ${20+Math.random()*15}s ${Math.random()*10}s linear infinite`;
+    f.textContent=R(['🐟','🐠','🐡','🦈','🐙']);
+    document.getElementById('water').appendChild(f);
+  }
+}
+
+function renderBuildings(){
+  const layer=document.getElementById('bld-layer');
+  layer.innerHTML='';
+  BUILDINGS.forEach(b=>{
+    const el=document.createElement('div');
+    el.className='bld';el.id='bld-'+b.id;
+    el.style.left=b.x+'%';
+    // Occupants dots
+    const occs=G.occupants[b.id]||[];
+    const dotHtml=occs.slice(0,4).map(rid=>{
+      const r=G.residents.find(x=>x.id===rid);
+      return r?`<div class="occ-dot" style="background:${r.skin}"></div>`:'';
+    }).join('');
+    el.innerHTML=`<div class="bld-occupants" id="occs-${b.id}">${dotHtml}</div>
+      <div class="bld-icon">${b.icon}</div>
+      <div class="bld-body" style="width:${b.w}px;height:${b.h}px;background:${b.color}">
+        <div class="bld-win" style="width:15px;height:15px;top:10px;left:9px"></div>
+        <div class="bld-win" style="width:15px;height:15px;top:10px;left:30px;animation-delay:.7s"></div>
+        <div class="bld-win" style="width:15px;height:15px;top:32px;left:9px;animation-delay:1.4s"></div>
+        <div class="bld-win" style="width:15px;height:15px;top:32px;left:30px;animation-delay:2.1s"></div>
+        <div class="bld-door" style="width:18px;height:26px"></div>
+      </div>
+      <div class="bld-name">${b.name}</div>`;
+    el.onclick=(e)=>{e.stopPropagation();openBuildingMenu(b);};
+    layer.appendChild(el);
+  });
+}
+
+function refreshBuildingOccupants(){
+  BUILDINGS.forEach(b=>{
+    const el=document.getElementById('occs-'+b.id);
+    if(!el)return;
+    const occs=G.occupants[b.id]||[];
+    el.innerHTML=occs.slice(0,4).map(rid=>{
+      const r=G.residents.find(x=>x.id===rid);
+      return r?`<div class="occ-dot" style="background:${r.skin}"></div>`:'';
+    }).join('');
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  AVATAR RENDERING
+// ══════════════════════════════════════════════════════
+function buildAvHTML(r){
+  const isSleep=G.time.hour>=23||G.time.hour<6;
+  // The avatar-flip div handles left/right flip
+  // But nametag and dialog bubbles must NOT flip — they sit outside av-flip
+  return `
+    <div class="av-mood-bbl" id="mood-${r.id}">${r.mood}</div>
+    <div class="av-flip" id="flip-${r.id}">
+      <div class="av-body" style="animation:walkBob ${.7+Math.random()*.25}s ease-in-out infinite">
+        <div class="av-head" style="background:${r.skin}">
+          <div class="av-hair-top">${hairEmoji(r.hairStyle)}</div>
+          <div class="av-eyes">
+            <div class="av-eye"><div class="av-pupil"></div></div>
+            <div class="av-eye"><div class="av-pupil"></div></div>
+          </div>
+          <div class="av-mouth">${isSleep?'😪':mouthEmoji(r.mood)}</div>
+        </div>
+        <div class="av-torso-wrap">
+          <div class="av-arm left" style="background:${r.skin}"><div class="av-hand" style="background:${r.skin}"></div></div>
+          <div class="av-shirt" style="background:${r.shirt}"></div>
+          <div class="av-arm right" style="background:${r.skin}"><div class="av-hand" style="background:${r.skin}"></div></div>
+        </div>
+        <div class="av-legs">
+          <div class="av-leg" style="background:${r.pants}"><div class="av-shoe" style="background:${r.shoes}"></div></div>
+          <div class="av-leg" style="background:${r.pants}"><div class="av-shoe" style="background:${r.shoes}"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="av-nametag" id="ntag-${r.id}">${r.name}</div>`;
+}
+
+function createAvatarEl(r){
+  const layer=document.getElementById('av-layer');
+  let el=document.getElementById('av-'+r.id);
+  if(el)el.remove();
+  if(r.indoor)return; // don't render if inside building
+  el=document.createElement('div');
+  el.className='av';el.id='av-'+r.id;
+  el.style.left=r.x+'%';el.style.bottom=r.y+'%';
+  el.innerHTML=buildAvHTML(r);
+  el.onclick=(e)=>{e.stopPropagation();openResidentModal(r);};
+  layer.appendChild(el);
+  applyFlip(r);
+}
+
+function renderAllAvatars(){
+  document.getElementById('av-layer').innerHTML='';
+  G.residents.forEach(r=>{if(!r.indoor)createAvatarEl(r);});
+}
+
+function applyFlip(r){
+  const flip=document.getElementById('flip-'+r.id);
+  if(!flip)return;
+  // Flip only the visual body, not the nametag (nametag is outside flip div)
+  flip.style.transform=r.dirX<0?'scaleX(-1)':'scaleX(1)';
+}
+
+function updateAvatarEl(r){
+  const el=document.getElementById('av-'+r.id);
+  if(!el)return;
+  el.style.left=r.x+'%';
+  applyFlip(r);
+  const mouth=el.querySelector('.av-mouth');
+  const isSleep=G.time.hour>=23||G.time.hour<6;
+  if(mouth)mouth.textContent=isSleep?'😪':mouthEmoji(r.mood);
+  const mb=document.getElementById('mood-'+r.id);
+  if(mb){mb.textContent=r.mood;mb.className='av-mood-bbl'+(r.showMood?' show':'');}
+}
+
+function showDialog(r,text,isAdult=false,duration=4500){
+  const el=document.getElementById('av-'+r.id);
+  if(!el)return;
+  el.querySelectorAll('.dialog-bbl').forEach(b=>b.remove());
+  const b=document.createElement('div');
+  b.className='dialog-bbl'+(isAdult?' adult':'');
+  b.textContent=text;
+  el.appendChild(b);
+  setTimeout(()=>{try{b.remove();}catch(e){}},duration);
+}
+
+function spawnFX(r,emoji){
+  const el=document.getElementById('av-'+r.id);
+  if(!el)return;
+  const fx=document.createElement('div');fx.className='fx';fx.textContent=emoji;
+  el.appendChild(fx);setTimeout(()=>{try{fx.remove();}catch(e){}},1850);
+}
+
+// ══════════════════════════════════════════════════════
+//  AI DIALOGUE
+// ══════════════════════════════════════════════════════
+async function aiDialogue(r, partner=null, adult=false){
+  if(r.indoor)return;
+  showDialog(r,'💭…',false,3000);
+  const rel=partner&&partner.id!==r.id?grel(G,r,partner):null;
+  const relDesc=rel?({friend:'ami(e)',love:'amoureux/se',rival:'rival(e)',neutral:'connaissances'}[rel.type]||'neutre'):'';
+  const otherCtx=partner&&partner.id!==r.id?`Il/elle est avec ${partner.name} (${partner.traits.join(', ')}), dont il/elle est ${relDesc||'connaissance'}.`:'Il/elle se promène seul(e).';
+  const thirdRes=G.residents.filter(x=>x.id!==r.id&&(!partner||x.id!==partner.id));
+  const thirdName=thirdRes.length?R(thirdRes).name:null;
+  const adultCtx=adult&&G.adultMode?`\nTu peux inclure des sous-entendus coquins, flirter ouvertement, ou faire allusion à une situation -18 entre les personnages. Sois suggestif(ve) mais pas vulgaire cliniquement.${thirdName?` Tu peux mentionner ${thirdName} dans un plan à 3 si ça semble amusant.`:''}`:'';
+  const traitsStr=r.traits.join(' et ');
+  const prompt=`Tu joues un personnage dans un jeu de simulation sociale humoristique "Île Bonheur".
+Personnage: ${r.name}, personnalités: ${traitsStr}, humeur: ${r.mood}.
+${otherCtx}${adultCtx}
+Génère UNE seule réplique courte (8-15 mots), drôle${adult&&G.adultMode?' ou suggestive':' ou absurde'}, cohérente avec TOUTES les personnalités du personnage.
+Juste la phrase, sans guillemets, sans ponctuation excessive.`;
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:90,messages:[{role:'user',content:prompt}]})});
+    const data=await resp.json();
+    const txt=(data.content?.[0]?.text||'').trim()||getFallback(r,adult);
+    showDialog(r,txt,adult&&G.adultMode);
+  }catch{
+    showDialog(r,getFallback(r,adult),adult&&G.adultMode);
+  }
+}
+
+function getFallback(r,adult=false){
+  if(adult&&G.adultMode&&Math.random()<.4){
+    const names=G.residents.filter(x=>x.id!==r.id).map(x=>x.name);
+    const b=names[0]||'quelqu\'un',c=names[1]||null;
+    const adultFalls=ADULT_DIALOGUES.slice(0,4);
+    return R(adultFalls)(r.name,b,c);
+  }
+  const mainTrait=r.traits[0]||'Drôle';
+  const pool=TRAIT_DIALOGUES[mainTrait]||TRAIT_DIALOGUES['Drôle'];
+  return R(pool);
+}
+
+// ══════════════════════════════════════════════════════
+//  EVENTS
+// ══════════════════════════════════════════════════════
+function addEvent(text){
+  const t=G.time;
+  G.events.unshift({ts:`${DAYS[(t.day-1)%7]} ${String(t.hour).padStart(2,'0')}:${String(t.min).padStart(2,'0')}`,text});
+  if(G.events.length>80)G.events.pop();
+  renderEvtPanel();
+}
+
+function fireEvent(){
+  if(G.residents.length<1){notify('😅','Créez d\'abord des habitants !');return;}
+  const pool=G.adultMode&&Math.random()<.3?ADULT_EVENTS:RANDOM_EVENTS;
+  let result;
+  if(G.residents.length>=2){result=R(pool)(G);}
+  else{result={i:'🌴',t:`${G.residents[0].name} contemple l'horizon en se demandant si quelqu'un va venir.`};}
+  addEvent(result.i+' '+result.t);
+  notify(result.i,result.t.slice(0,65)+(result.t.length>65?'…':''));
+  if(result.fx==='heart'&&result.tgts){result.tgts.forEach(r=>spawnFX(r,'💕'));}
+  refreshStats();renderAllAvatars();renderRelPanel();
+}
+
+// ══════════════════════════════════════════════════════
+//  ACTION BUTTONS
+// ══════════════════════════════════════════════════════
+function doFestival(){
+  G.residents.forEach(r=>{r.happiness=clamp(r.happiness+20,0,100);r.mood=R(GOOD_MOODS);r.showMood=true;setTimeout(()=>{r.showMood=false;},2200);});
+  addEvent('🎉 Le joueur organise une grande fête tropicale ! Confettis, flamants, et ananas partout !');
+  notify('🎉','Fête générale !');refreshStats();renderAllAvatars();
+}
+function doPeace(){
+  const rivals=G.relations.filter(r=>r.type==='rival');
+  if(!rivals.length){notify('😄','Aucun conflit !');return;}
+  const rel=R(rivals);rel.type='friend';rel.score=clamp(rel.score+32,0,100);
+  const a=G.residents.find(x=>x.id===rel.a),b=G.residents.find(x=>x.id===rel.b);
+  if(a&&b){a.mood='😊';b.mood='😊';addEvent(`🕊️ ${a.name} et ${b.name} font la paix autour d'un smoothie mangue !`);notify('🕊️',`Paix: ${a.name} & ${b.name}`);}
+  refreshStats();renderRelPanel();renderAllAvatars();
+}
+function doLove(){
+  if(G.residents.length<2){notify('😅','Besoin de 2+ habitants !');return;}
+  const [a,b]=two(G);if(a.id===b.id)return;
+  const r=grel(G,a,b);r.type='love';r.score=100;a.mood='😍';b.mood='😍';
+  spawnFX(a,'💕');spawnFX(b,'💕');
+  addEvent(`💕 Coup de foudre entre ${a.name} et ${b.name} lors d'un coucher de soleil kitsch !`);
+  notify('💕',`${a.name} 💕 ${b.name}`);refreshStats();renderRelPanel();renderAllAvatars();
+}
+function doGift(){
+  if(!G.residents.length)return;
+  const r=R(G.residents);
+  r.happiness=clamp(r.happiness+22,0,100);r.mood='🤩';r.showMood=true;
+  setTimeout(()=>{r.showMood=false;},2500);spawnFX(r,'✨');
+  addEvent(`🎁 ${r.name} reçoit un cadeau mystérieux ! C'était une boîte vide mais joliment emballée.`);
+  notify('🎁',`${r.name} est ravi(e) !`);refreshStats();updateAvatarEl(r);
+}
+
+// ══════════════════════════════════════════════════════
+//  STATS
+// ══════════════════════════════════════════════════════
+function refreshStats(){
+  const avg=G.residents.length?Math.round(G.residents.reduce((s,r)=>s+r.happiness,0)/G.residents.length):60;
+  G.happiness=avg;
+  document.getElementById('hap-fill').style.width=avg+'%';
+  document.getElementById('hap-pct').textContent=avg+'%';
+  const n=G.residents.length;
+  document.getElementById('pop-info').textContent=`👥 ${n} habitant${n!==1?'s':''}`;
+  renderResPanel();
+}
+
+// ══════════════════════════════════════════════════════
+//  PANEL RENDERING
+// ══════════════════════════════════════════════════════
+let curTab='res';
+function switchTab(tab){
+  curTab=tab;
+  ['res','evt','rel'].forEach(t=>{
+    document.getElementById('ptab-'+t).className='ptab'+(t===tab?' on':'');
+    document.getElementById('pb-'+t).style.display=t===tab?'block':'none';
+  });
+}
+function renderResPanel(){
+  const el=document.getElementById('pb-res');if(!el)return;
+  if(!G.residents.length){
+    el.innerHTML='<div style="color:rgba(255,255,255,.3);text-align:center;padding:2rem;font-size:.8rem">Aucun habitant.<br>Créez votre premier personnage ! 🏝️</div>';return;
+  }
+  el.innerHTML=G.residents.map(r=>{
+    const sel=G.selectedId===r.id;
+    const hp=r.happiness;
+    const rels=G.relations.filter(rel=>(rel.a===r.id||rel.b===r.id)&&rel.type==='love');
+    const indoorBld=r.indoor?BUILDINGS.find(b=>b.id===r.indoor):null;
+    return`<div class="res-card${sel?' sel':''}" onclick="selectResident('${r.id}')">
+      <div class="rc-row">
+        <div class="rc-face" style="background:${r.skin}">
+          <div class="rc-hair">${hairEmoji(r.hairStyle)}</div>
+          <div class="rc-mouth">${mouthEmoji(r.mood)}</div>
+        </div>
+        <div class="rc-info">
+          <div class="rc-name">${r.name}${indoorBld?` <span style="font-size:.6rem;opacity:.6">${indoorBld.icon}</span>`:''}</div>
+          <div class="rc-traits">${r.traits.join(' · ')}</div>
+          <div class="rc-badges">
+            <span class="badge${hp>=70?' h':hp<35?' s':''}">${r.mood} ${hp}%</span>
+            <span class="badge">⚡${r.energy}%</span>
+            ${rels.length?'<span class="badge l">💕</span>':''}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function renderEvtPanel(){
+  const el=document.getElementById('pb-evt');if(!el)return;
+  if(!G.events.length){el.innerHTML='<div style="color:rgba(255,255,255,.3);text-align:center;padding:2rem;font-size:.8rem">Aucun événement encore…</div>';return;}
+  el.innerHTML=G.events.slice(0,30).map(e=>`<div class="evt-item"><div class="evt-time">${e.ts}</div><div class="evt-txt">${e.text}</div></div>`).join('');
+}
+function renderRelPanel(){
+  const el=document.getElementById('pb-rel');if(!el)return;
+  const notable=G.relations.filter(r=>r.type!=='neutral');
+  if(!notable.length){el.innerHTML='<div style="color:rgba(255,255,255,.3);text-align:center;padding:2rem;font-size:.8rem">Pas encore de relations spéciales…</div>';return;}
+  el.innerHTML=notable.map(rel=>{
+    const a=G.residents.find(x=>x.id===rel.a),b=G.residents.find(x=>x.id===rel.b);
+    if(!a||!b)return'';
+    const labels={friend:'💚 Amis',love:'💕 Amour',rival:'😤 Rivaux'};
+    const cls={friend:'rb-f',love:'rb-l',rival:'rb-r'};
+    return`<div class="rel-item"><span class="rel-badge ${cls[rel.type]}">${labels[rel.type]}</span><span class="rel-names">${a.name} &amp; ${b.name}</span><span style="color:rgba(255,255,255,.35);font-size:.63rem">${rel.score}pts</span></div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════
+//  SELECT RESIDENT
+// ══════════════════════════════════════════════════════
+function selectResident(id){
+  G.selectedId=id;renderResPanel();
+  const r=G.residents.find(x=>x.id===id);
+  if(r)openResidentModal(r);
+}
+
+// ══════════════════════════════════════════════════════
+//  MODAL SYSTEM
+// ══════════════════════════════════════════════════════
+function openModal(html){
+  document.getElementById('mbox').innerHTML=html;
+  document.getElementById('modal-overlay').className='on';
+}
+function closeModal(){document.getElementById('modal-overlay').className='';}
+
+// ── Resident Modal ──
+function openResidentModal(r){
+  const rels=getRelations(G,r.id).filter(rel=>rel.type!=='neutral');
+  const relsHtml=rels.map(rel=>{
+    const o=otherInRel(G,rel,r.id);if(!o)return'';
+    const labels={friend:'💚 Ami(e)',love:'💕 Amour',rival:'😤 Rival(e)'};
+    const cls={friend:'rb-f',love:'rb-l',rival:'rb-r'};
+    return`<div class="rel-item"><span class="rel-badge ${cls[rel.type]}">${labels[rel.type]}</span><span class="rel-names">${o.name}</span><span style="color:rgba(255,255,255,.35);font-size:.63rem">${rel.score}pts</span></div>`;
+  }).join('');
+  const indoorBld=r.indoor?BUILDINGS.find(b=>b.id===r.indoor):null;
+  openModal(`
+    <button class="mclose" onclick="closeModal()">✕</button>
+    <div class="mtitle">${r.name} ${r.mood}</div>
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.1rem">
+      <div class="prev-av" style="background:${r.skin};width:72px;height:72px;flex-shrink:0">
+        <div class="prev-hair">${hairEmoji(r.hairStyle)}</div>
+        <div style="font-size:11px">${mouthEmoji(r.mood)}</div>
+      </div>
+      <div>
+        <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.4rem">${r.traits.map(t=>`<span style="background:rgba(255,217,61,.15);border:1px solid rgba(255,217,61,.3);color:#FFD93D;font-size:.65rem;padding:1px 7px;border-radius:8px;font-weight:700">${t}</span>`).join('')}</div>
+        <div style="color:rgba(255,255,255,.5);font-size:.72rem">${r.faceShape} · ${r.hairStyle}</div>
+        ${indoorBld?`<div style="color:rgba(255,255,255,.4);font-size:.68rem;margin-top:3px">${indoorBld.icon} Dans: ${indoorBld.name}</div>`:''}
+      </div>
+    </div>
+    <div class="stat-row"><span class="stat-lbl">❤️ Bonheur</span><div class="stat-track"><div class="stat-fill" style="width:${r.happiness}%;background:#FF6B6B"></div></div></div>
+    <div class="stat-row"><span class="stat-lbl">⚡ Énergie</span><div class="stat-track"><div class="stat-fill" style="width:${r.energy}%;background:#FFD93D"></div></div></div>
+    <div class="stat-row"><span class="stat-lbl">👥 Social</span><div class="stat-track"><div class="stat-fill" style="width:${r.social}%;background:#6BCB77"></div></div></div>
+    <div style="margin-top:.9rem">
+      <div style="color:rgba(255,255,255,.4);font-size:.68rem;font-weight:800;text-transform:uppercase;margin-bottom:.4rem">Relations</div>
+      ${relsHtml||'<div style="color:rgba(255,255,255,.28);font-size:.72rem">Pas encore de relations spéciales...</div>'}
+    </div>
+    <div class="brow">
+      <button class="btn-sec btn-y" onclick="aiDialogue(G.residents.find(x=>x.id==='${r.id}'),null,false);closeModal()">💬 Dialogue</button>
+      ${G.adultMode?`<button class="btn-sec" style="border-color:rgba(255,107,107,.4);color:#FF6B6B;background:rgba(255,107,107,.08)" onclick="aiDialogue(G.residents.find(x=>x.id==='${r.id}'),null,true);closeModal()">🔞 Dialogue adulte</button>`:''}
+      <button class="btn-sec btn-g" onclick="boostRes('${r.id}');closeModal()">✨ Booster</button>
+      <button class="btn-sec" onclick="openSendTo('${r.id}')">🏠 Envoyer dans...</button>
+      <button class="btn-sec" onclick="editResident('${r.id}')">✏️ Modifier</button>
+      <button class="btn-sec btn-r" onclick="removeResident('${r.id}');closeModal()">🚢 Partir</button>
+    </div>
+  `);
+}
+
+function boostRes(id){
+  const r=G.residents.find(x=>x.id===id);if(!r)return;
+  r.happiness=clamp(r.happiness+25,0,100);r.energy=clamp(r.energy+18,0,100);r.mood=R(GOOD_MOODS);
+  r.showMood=true;setTimeout(()=>{r.showMood=false;},2500);spawnFX(r,'✨');
+  addEvent(`✨ ${r.name} reçoit un boost magique !`);notify('✨',`${r.name} boosté(e) !`);
+  refreshStats();updateAvatarEl(r);
+}
+
+function removeResident(id){
+  const r=G.residents.find(x=>x.id===id);if(!r)return;
+  // Remove from building
+  BUILDINGS.forEach(b=>{if(G.occupants[b.id])G.occupants[b.id]=G.occupants[b.id].filter(rid=>rid!==id);});
+  document.getElementById('av-'+id)?.remove();
+  G.residents=G.residents.filter(x=>x.id!==id);
+  G.relations=G.relations.filter(rel=>rel.a!==id&&rel.b!==id);
+  addEvent(`🚢 ${r.name} quitte l'île pour explorer le monde.`);
+  notify('🚢',`${r.name} a quitté l'île`);
+  refreshStats();renderRelPanel();refreshBuildingOccupants();
+}
+
+// ── Send resident to building ──
+function openSendTo(resId){
+  const r=G.residents.find(x=>x.id===resId);if(!r)return;
+  openModal(`
+    <button class="mclose" onclick="closeModal()">✕</button>
+    <div class="mtitle">🏠 Envoyer ${r.name}…</div>
+    <div style="color:rgba(255,255,255,.5);font-size:.8rem;margin-bottom:.8rem;text-align:center">Choisissez un bâtiment ou l'île</div>
+    <div class="bld-menu-grid">
+      <div class="bld-menu-btn" onclick="sendResidentTo('${resId}',null);closeModal()"><span class="bm-icon">🏝️</span>Sur l'île</div>
+      ${BUILDINGS.map(b=>`<div class="bld-menu-btn" onclick="sendResidentTo('${resId}','${b.id}');closeModal()"><span class="bm-icon">${b.icon}</span>${b.name}</div>`).join('')}
+    </div>
+  `);
+}
+
+function sendResidentTo(resId, bldId){
+  const r=G.residents.find(x=>x.id===resId);if(!r)return;
+  // Remove from previous building
+  if(r.indoor&&G.occupants[r.indoor]){
+    G.occupants[r.indoor]=G.occupants[r.indoor].filter(id=>id!==resId);
+  }
+  r.indoor=bldId;
+  if(bldId){
+    if(!G.occupants[bldId])G.occupants[bldId]=[];
+    if(!G.occupants[bldId].includes(resId))G.occupants[bldId].push(resId);
+    const bld=BUILDINGS.find(b=>b.id===bldId);
+    addEvent(`${bld.icon} ${r.name} entre dans ${bld.name}.`);
+    // Remove avatar from island
+    document.getElementById('av-'+resId)?.remove();
+  } else {
+    // Back to island
+    r.x=RN(10,80);r.y=RN(0,5);
+    createAvatarEl(r);
+    addEvent(`🏝️ ${r.name} retourne se promener sur l'île.`);
+  }
+  refreshBuildingOccupants();
+  renderResPanel();
+}
+
+// ── Building Menu ──
+function openBuildingMenu(b){
+  const occs=(G.occupants[b.id]||[]).map(id=>G.residents.find(r=>r.id===id)).filter(Boolean);
+  const occsHtml=occs.length?`<div style="margin-bottom:1rem">
+    <div class="mlabel">Occupants (${occs.length})</div>
+    <div class="occ-list">${occs.map(r=>`<div class="occ-pill" onclick="openResidentModal(G.residents.find(x=>x.id==='${r.id}'))"><div class="occ-av-dot" style="background:${r.skin}"></div>${r.name} ${r.mood}</div>`).join('')}</div>
+    <button class="btn-sec" style="margin-top:.5rem;width:100%" onclick="kickAll('${b.id}');closeModal()">📤 Tout le monde dehors</button>
+  </div>`:'<div style="color:rgba(255,255,255,.3);font-size:.75rem;margin-bottom:.8rem;text-align:center">Bâtiment vide…</div>';
+  const sendBtn=`<button class="btn-sec btn-g" style="width:100%;margin-bottom:.5rem" onclick="openSendMultiple('${b.id}')">➕ Faire entrer un habitant</button>`;
+
+  // Build function buttons by building type
+  let funcHtml='<div class="bld-menu-grid">';
+  if(b.functions.includes('chat'))funcHtml+=`<div class="bld-menu-btn" onclick="bldChat('${b.id}');closeModal()"><span class="bm-icon">💬</span>Déc-lencher discussion</div>`;
+  if(b.functions.includes('event'))funcHtml+=`<div class="bld-menu-btn" onclick="fireEvent();closeModal()"><span class="bm-icon">🎲</span>Événement ici</div>`;
+  if(b.functions.includes('boost'))funcHtml+=`<div class="bld-menu-btn" onclick="boostAll('${b.id}');closeModal()"><span class="bm-icon">✨</span>Booster tous</div>`;
+  if(b.functions.includes('shop'))funcHtml+=`<div class="bld-menu-btn" onclick="openShop();closeModal()"><span class="bm-icon">🛒</span>Boutique</div>`;
+  if(b.functions.includes('relax'))funcHtml+=`<div class="bld-menu-btn" onclick="relaxAll('${b.id}');closeModal()"><span class="bm-icon">😴</span>Reposer tous</div>`;
+  if(b.functions.includes('style'))funcHtml+=`<div class="bld-menu-btn" onclick="styleResident('${b.id}');closeModal()"><span class="bm-icon">💇</span>Refaire le look</div>`;
+  if(b.functions.includes('sport'))funcHtml+=`<div class="bld-menu-btn" onclick="sportAll('${b.id}');closeModal()"><span class="bm-icon">🏋️</span>Séance sport</div>`;
+  if(b.functions.includes('learn'))funcHtml+=`<div class="bld-menu-btn" onclick="learnAll('${b.id}');closeModal()"><span class="bm-icon">📚</span>Cours collectif</div>`;
+  if(b.functions.includes('marry'))funcHtml+=`<div class="bld-menu-btn" onclick="openMarry('${b.id}');closeModal()"><span class="bm-icon">💍</span>Mariage !</div>`;
+  if(b.functions.includes('rename'))funcHtml+=`<div class="bld-menu-btn" onclick="openIslandSettings();closeModal()"><span class="bm-icon">✏️</span>Renommer l'île</div>`;
+  if(b.functions.includes('date'))funcHtml+=`<div class="bld-menu-btn" onclick="openDate('${b.id}');closeModal()"><span class="bm-icon">🌹</span>Organiser un rencard</div>`;
+  if(b.functions.includes('quiz'))funcHtml+=`<div class="bld-menu-btn" onclick="openQuiz();closeModal()"><span class="bm-icon">🧠</span>Quiz Île</div>`;
+  if(b.functions.includes('gift'))funcHtml+=`<div class="bld-menu-btn" onclick="doGift();closeModal()"><span class="bm-icon">🎁</span>Offrir cadeau</div>`;
+  funcHtml+='</div>';
+
+  openModal(`
+    <button class="mclose" onclick="closeModal()">✕</button>
+    <div style="text-align:center;font-size:3rem;margin-bottom:.3rem">${b.icon}</div>
+    <div class="mtitle">${b.name}</div>
+    ${sendBtn}${occsHtml}${funcHtml}
+  `);
+}
+
+function kickAll(bldId){
+  const ids=[...(G.occupants[bldId]||[])];
+  ids.forEach(id=>{
+    const r=G.residents.find(x=>x.id===id);if(!r)return;
+    r.indoor=null;r.x=RN(10,80);r.y=RN(0,5);
+    createAvatarEl(r);
+  });
+  G.occupants[bldId]=[];
+  refreshBuildingOccupants();renderResPanel();
+  notify('📤','Tout le monde est sorti !');
+}
+
+function boostAll(bldId){
+  (G.occupants[bldId]||[]).forEach(id=>{
+    const r=G.residents.find(x=>x.id===id);if(!r)return;
+    r.happiness=clamp(r.happiness+20,0,100);r.energy=clamp(r.energy+15,0,100);r.mood=R(GOOD_MOODS);
+  });
+  const bld=BUILDINGS.find(b=>b.id===bldId);
+  addEvent(`✨ ${bld.name} boost tous les résidents présents !`);
+  notify('✨','Boost collectif !');refreshStats();
+}
+
+function relaxAll(bldId){
+  (G.occupants[bldId]||[]).forEach(id=>{
+    const r=G.residents.find(x=>x.id===id);if(!r)return;
+    r.energy=clamp(r.energy+30,0,100);r.happiness=clamp(r.happiness+10,0,100);r.mood='😴';
+  });
+  addEvent(`😴 Séance de détente collective au parc !`);notify('😴','Repos collectif !');refreshStats();
+}
+
+function sportAll(bldId){
+  (G.occupants[bldId]||[]).forEach(id=>{
+    const r=G.residents.find(x=>x.id===id);if(!r)return;
+    r.energy=clamp(r.energy+20,0,100);r.happiness=clamp(r.happiness+12,0,100);r.mood='🤩';
+  });
+  addEvent(`🏋️ Séance sport intensive au gym ! Des courbatures pour tout le monde !`);notify('🏋️','Séance sport !');refreshStats();
+}
+
+function learnAll(bldId){
+  (G.occupants[bldId]||[]).forEach(id=>{
+    const r=G.residents.find(x=>x.id===id);if(!r)return;
+    r.social=clamp(r.social+15,0,100);r.happiness=clamp(r.happiness+8,0,100);
+    if(Math.random()<.3&&!r.traits.includes('Curieux'))r.traits.push('Curieux');
+  });
+  addEvent(`📚 Cours collectif à l'école ! La connaissance est en marche.`);notify('📚','Cours collectif !');refreshStats();renderResPanel();
+}
+
+function styleResident(bldId){
+  const occs=(G.occupants[bldId]||[]).map(id=>G.residents.find(r=>r.id===id)).filter(Boolean);
+  if(!occs.length){notify('💇','Personne au salon !');return;}
+  occs.forEach(r=>{r.hair=R(HAIR_COLORS);r.hairStyle=R(HAIR_STYLES);r.shirt=R(SHIRT_COLORS);});
+  notify('💇','Nouveau look pour tout le monde !');
+  addEvent(`💇 Relooking total au salon beauté !`);
+  renderResPanel();
+}
+
+function bldChat(bldId){
+  const occs=(G.occupants[bldId]||[]).map(id=>G.residents.find(r=>r.id===id)).filter(Boolean);
+  if(occs.length>=2){
+    aiDialogue(occs[0],occs[1],false);
+    if(occs.length>2)setTimeout(()=>aiDialogue(occs[1],occs[2],false),1500);
+  } else if(occs.length===1){aiDialogue(occs[0],null,false);}
+  else {notify('💬','Personne ici pour discuter !');}
+}
+
+// Send multiple to building
+function openSendMultiple(bldId){
+  const bld=BUILDINGS.find(b=>b.id===bldId);
+  const available=G.residents.filter(r=>r.indoor!==bldId);
+  if(!available.length){notify('😅','Tous sont déjà ici !');return;}
+  openModal(`
+    <button class="mclose" onclick="closeModal()">✕</button>
+    <div class="mtitle">➕ Envoyer vers ${bld.name}</div>
+    <div style="color:rgba(255,255,255,.4);font-size:.75rem;margin-bottom:.7rem">Cliquez pour envoyer chaque habitant</div>
+    ${available.map(r=>`<div class="res-card" onclick="sendResidentTo('${r.id}','${bldId}');closeModal()">
+      <div class="rc-row">
+        <div class="rc-face" style="background:${r.skin}"><div class="rc-mouth">${mouthEmoji(r.mood)}</div></div>
+        <div class="rc-info"><div class="rc-name">${r.name}</div><div class="rc-traits">${r.traits.join(' · ')}</div></div>
+        <span style="color:#6BCB77;font-weight:700;font-size:.8rem">➕</span>
+      </div>
+    </div>`).join('')}
+  `);
+}
+
+// Marry
+function openMarry(bldId){
+  const occs=(G.occupants[bldId]||[]).map(id=>G.residents.find(r=>r.id===id)).filter(Boolean);
+  const loveRel=G.relations.find(rel=>rel.type==='love'&&occs.some(r=>r.id===rel.a)&&occs.some(r=>r.id===rel.b));
+  if(!loveRel){notify('💍','Il faut un couple amoureux présent à la mairie !');return;}
+  const a=G.residents.find(x=>x.id===loveRel.a),b=G.residents.find(x=>x.id===loveRel.b);
+  if(!a||!b)return;
+  loveRel.score=100;a.mood='🤩';b.mood='🤩';a.happiness=100;b.happiness=100;
+  addEvent(`💍 Mariage officiel entre ${a.name} et ${b.name} ! Toute l'île est invitée !`);
+  notify('💍',`Félicitations ${a.name} & ${b.name} !`);refreshStats();renderRelPanel();
+}
+
+// Date
+function openDate(bldId){
+  if(G.residents.length<2){notify('😅','Besoin de 2 habitants !');return;}
+  const [a,b]=two(G);const r=grel(G,a,b);r.type='love';r.score=Math.min(100,r.score+30);
+  a.mood='😍';b.mood='😍';
+  if(!r.indoor)sendResidentTo(a.id,bldId);
+  if(!r.indoor)sendResidentTo(b.id,bldId);
+  addEvent(`🌹 Rencard romantique entre ${a.name} et ${b.name} au parc sous les étoiles !`);
+  notify('🌹',`Rencard: ${a.name} & ${b.name}`);refreshStats();renderRelPanel();
+}
+
+// Island settings
+function openIslandSettings(){
+  openModal(`
+    <button class="mclose" onclick="closeModal()">✕</button>
+    <div class="mtitle">🏝️ Paramètres de l'île</div>
+    <div class="msec">
+      <div class="mlabel">Nom de l'île</div>
+      <input class="minput" id="isle-rename" value="${G.islandName}" maxlength="28">
+    </div>
+    <div class="msec">
+      <div class="mlabel">Mode de dialogue</div>
+      <div class="mopts">
+        <div class="mopt${!G.adultMode?' sel':''}" onclick="G.adultMode=false;updateModeIndicator();renderCreatorModal&&null;document.querySelectorAll('.mopt').forEach((el,i)=>el.className='mopt'+(i===0?' sel':''))">🌈 Tout public</div>
+        <div class="mopt${G.adultMode?' sel':''}" onclick="G.adultMode=true;updateModeIndicator();document.querySelectorAll('.mopt').forEach((el,i)=>el.className='mopt'+(i===1?' sel':''))">🔞 Adulte (-18)</div>
+      </div>
+    </div>
+    <button class="btn-pri" onclick="applyIslandSettings()">✅ Appliquer</button>
+  `);
+}
+function applyIslandSettings(){
+  const v=document.getElementById('isle-rename')?.value?.trim();
+  if(v)G.islandName=v;
+  updateIslandTitle();updateModeIndicator();closeModal();
+  notify('✅','Paramètres sauvegardés !');
+}
+
+// ── SHOP ──
+function openShop(){
+  openModal(`
+    <button class="mclose" onclick="closeModal()">✕</button>
+    <div class="mtitle">🛒 Boutique Île</div>
+    <div class="shop-grid" id="shop-grid">${renderShopItems()}</div>
+    <div class="shop-add-form">
+      <div class="mlabel">➕ Créer un article</div>
+      <input class="minput" id="new-item-name" placeholder="Nom de l'article" style="margin-bottom:.4rem">
+      <div style="display:flex;gap:.4rem;margin-bottom:.4rem">
+        <input class="minput" id="new-item-emoji" placeholder="Emoji 🎁" style="width:80px">
+        <input class="minput" id="new-item-price" placeholder="Prix 💰" type="number" min="1" max="999" style="width:90px">
+        <input class="minput" id="new-item-desc" placeholder="Description de l'effet" style="flex:1">
+      </div>
+      <button class="btn-pri" style="margin-top:0" onclick="addShopItem()">Ajouter l'article !</button>
+    </div>
+  `);
+}
+
+function renderShopItems(){
+  return shopItems.map(item=>`
+    <div class="shop-item" onclick="buyItem('${item.id}')">
+      <div class="shop-item-img">${item.emoji||'📦'}</div>
+      <div class="shop-item-name">${item.name}</div>
+      <div class="shop-item-price">${item.price} 🌟</div>
+      <div style="font-size:.6rem;color:rgba(255,255,255,.4);margin-top:2px">${item.desc||''}</div>
+    </div>
+  `).join('');
+}
+
+function addShopItem(){
+  const name=document.getElementById('new-item-name')?.value?.trim();
+  const emoji=document.getElementById('new-item-emoji')?.value?.trim()||'📦';
+  const price=parseInt(document.getElementById('new-item-price')?.value)||10;
+  const desc=document.getElementById('new-item-desc')?.value?.trim()||'';
+  if(!name){notify('😅','Donnez un nom à l\'article !');return;}
+  shopItems.push({id:uid(),name,emoji,price,desc});
+  localStorage.setItem('ib_shop',JSON.stringify(shopItems));
+  document.getElementById('shop-grid').innerHTML=renderShopItems();
+  notify('✅','Article ajouté : '+name+' '+emoji);
+}
+
+function buyItem(itemId){
+  const item=shopItems.find(x=>x.id===itemId);if(!item)return;
+  if(!G.residents.length){notify('😅','Aucun habitant !');return;}
+  const r=R(G.residents);
+  r.happiness=clamp(r.happiness+15,0,100);
+  spawnFX(r,item.emoji||'✨');
+  addEvent(`🛒 ${r.name} achète "${item.name}" ${item.emoji} à la boutique !`);
+  notify(item.emoji||'🛒',`${r.name} a acheté ${item.name} !`);
+  refreshStats();
+}
+
+// Quiz
+const QUIZ_QS=[
+  {q:"Quel est le fruit le plus controversé sur une pizza ?",a:["Ananas","Fraise","Mangue","Durian"],c:0},
+  {q:"Combien de flamants roses faut-il pour faire une île heureuse ?",a:["Aucun","42","7","Au moins 3"],c:3},
+  {q:"Quelle est la meilleure heure pour une sieste tropicale ?",a:["6h du matin","Toujours","Jamais","14h précis"],c:1},
+  {q:"Sur l'île, que fait-on quand il pleut ?",a:["On panique","On danse","On pleure","On mange des crêpes"],c:3},
+  {q:"Quel est le super-pouvoir secret des cocotiers ?",a:["Voler","Parler","Écouter les secrets","Faire du café"],c:2},
+];
+let quizState={q:0,score:0};
+function openQuiz(){
+  quizState={q:0,score:0};renderQuiz();
+}
+function renderQuiz(){
+  if(quizState.q>=QUIZ_QS.length){
+    openModal(`<button class="mclose" onclick="closeModal()">✕</button>
+      <div class="mtitle">🧠 Résultat</div>
+      <div style="text-align:center;font-size:3rem;margin:.5rem 0">${quizState.score>=4?'🏆':quizState.score>=2?'⭐':'🥚'}</div>
+      <div style="text-align:center;color:white;font-weight:800;font-size:1.2rem">${quizState.score}/${QUIZ_QS.length}</div>
+      <div style="text-align:center;color:rgba(255,255,255,.5);font-size:.85rem;margin:.5rem 0">${quizState.score>=4?'Génie insulaire !':quizState.score>=2?'Pas mal !':'L\'île se demande si tu l\'aimes vraiment.'}</div>
+      <button class="btn-pri" onclick="openQuiz()">Rejouer !</button>`);
+    const boost=quizState.score*3;G.residents.forEach(r=>r.happiness=clamp(r.happiness+boost,0,100));refreshStats();
+    return;
+  }
+  const q=QUIZ_QS[quizState.q];
+  openModal(`<button class="mclose" onclick="closeModal()">✕</button>
+    <div class="mtitle">🧠 Quiz Île</div>
+    <div style="color:rgba(255,255,255,.4);font-size:.72rem;text-align:center;margin-bottom:.7rem">Question ${quizState.q+1}/${QUIZ_QS.length} · Score: ${quizState.score}</div>
+    <div style="color:white;font-weight:700;font-size:.9rem;text-align:center;margin-bottom:1rem;line-height:1.5">${q.q}</div>
+    ${q.a.map((ans,i)=>`<button class="bld-menu-btn" style="width:100%;margin-bottom:.4rem;text-align:left;padding:.6rem .9rem" onclick="answerQuiz(${i})">${ans}</button>`).join('')}`);
+}
+function answerQuiz(idx){
+  const q=QUIZ_QS[quizState.q];
+  if(idx===q.c){quizState.score++;notify('✅','Bonne réponse !');}
+  else{notify('❌',`Raté ! C'était: ${q.a[q.c]}`);}
+  quizState.q++;renderQuiz();
+}
+
+// ══════════════════════════════════════════════════════
+//  CREATOR (multi-traits)
+// ══════════════════════════════════════════════════════
+let CS = {};
+function openCreator(){
+  CS={name:'',traits:[R(ALL_TRAITS)],skin:SKIN_COLORS[0],hair:HAIR_COLORS[0],shirt:SHIRT_COLORS[0],pants:PANT_COLORS[0],shoes:SHOE_COLORS[0],hairStyle:'Courte',faceShape:'Ronde'};
+  renderCreatorModal();
+}
+function editResident(id){
+  const r=G.residents.find(x=>x.id===id);if(!r)return;
+  CS={...r,traits:[...r.traits],_editId:id};renderCreatorModal();
+}
+function renderCreatorModal(){
+  const c=CS;
+  openModal(`
+    <button class="mclose" onclick="closeModal()">✕</button>
+    <div class="mtitle">${c._editId?'✏️ Modifier':'✨ Créer un personnage'}</div>
+    <div class="prev-av" style="background:${c.skin}">
+      <div class="prev-hair">${hairEmoji(c.hairStyle)}</div>
+      <div style="font-size:11px;color:rgba(0,0,0,.4)">${mouthEmoji('😊')}</div>
+    </div>
+    <div style="text-align:center;color:rgba(255,255,255,.35);font-size:.7rem;margin-bottom:.9rem">${c.traits.join(' · ')} · ${c.hairStyle}</div>
+
+    <div class="msec">
+      <div class="mlabel">Prénom</div>
+      <input class="minput" id="c-name" placeholder="Ex: Zara, Luca, Mia…" value="${c.name}" maxlength="14" oninput="CS.name=this.value">
+    </div>
+
+    <div class="msec">
+      <div class="mlabel">Personnalités (cliquez pour ajouter/retirer — plusieurs possibles)</div>
+      <div class="mopts">${ALL_TRAITS.map(t=>`<div class="mopt${c.traits.includes(t)?' sel':''}" onclick="toggleTrait('${t}')">${t}</div>`).join('')}</div>
+    </div>
+
+    <div class="msec">
+      <div class="mlabel">Forme du visage</div>
+      <div class="mopts">${FACE_SHAPES.map(s=>`<div class="mopt${c.faceShape===s?' sel':''}" onclick="CS.faceShape='${s}';renderCreatorModal()">${s}</div>`).join('')}</div>
+    </div>
+
+    <div class="msec">
+      <div class="mlabel">Coiffure</div>
+      <div class="mopts">${HAIR_STYLES.map(s=>`<div class="mopt${c.hairStyle===s?' sel':''}" onclick="CS.hairStyle='${s}';renderCreatorModal()">${hairEmoji(s)||'🚫'} ${s}</div>`).join('')}</div>
+    </div>
+
+    <div class="msec">
+      <div class="mlabel">Peau</div>
+      <div class="mopts">${SKIN_COLORS.map(col=>`<div class="mcol${c.skin===col?' sel':''}" style="background:${col}" onclick="CS.skin='${col}';renderCreatorModal()"></div>`).join('')}</div>
+    </div>
+
+    <div class="msec">
+      <div class="mlabel">Cheveux</div>
+      <div class="mopts">${HAIR_COLORS.map(col=>`<div class="mcol${c.hair===col?' sel':''}" style="background:${col};${col==='#ffffff'?'border:1px solid rgba(255,255,255,.3)':''}" onclick="CS.hair='${col}';renderCreatorModal()"></div>`).join('')}</div>
+    </div>
+
+    <div class="msec">
+      <div class="mlabel">Haut</div>
+      <div class="mopts">${SHIRT_COLORS.map(col=>`<div class="mcol${c.shirt===col?' sel':''}" style="background:${col}" onclick="CS.shirt='${col}';renderCreatorModal()"></div>`).join('')}</div>
+    </div>
+
+    <div class="msec">
+      <div class="mlabel">Pantalon</div>
+      <div class="mopts">${PANT_COLORS.map(col=>`<div class="mcol${c.pants===col?' sel':''}" style="background:${col}" onclick="CS.pants='${col}';renderCreatorModal()"></div>`).join('')}</div>
+    </div>
+
+    <div class="msec">
+      <div class="mlabel">Chaussures</div>
+      <div class="mopts">${SHOE_COLORS.map(col=>`<div class="mcol${c.shoes===col?' sel':''}" style="background:${col};${col==='#FFFFFF'?'border:1px solid rgba(255,255,255,.3)':''}" onclick="CS.shoes='${col}';renderCreatorModal()"></div>`).join('')}</div>
+    </div>
+
+    <button class="btn-pri" onclick="confirmCreate()">${c._editId?'💾 Sauvegarder':'🎉 Ajouter sur l\'île !'}</button>
+  `);
+}
+
+function toggleTrait(t){
+  const idx=CS.traits.indexOf(t);
+  if(idx>=0){if(CS.traits.length>1)CS.traits.splice(idx,1);}
+  else{if(CS.traits.length<5)CS.traits.push(t); else notify('😅','Maximum 5 personnalités !');}
+  renderCreatorModal();
+}
+
+function confirmCreate(){
+  const nameInput=document.getElementById('c-name');
+  const name=(nameInput?.value?.trim())||R(NAMES);
+  if(CS._editId){
+    const r=G.residents.find(x=>x.id===CS._editId);
+    if(r){Object.assign(r,{...CS,name,id:r.id,_editId:undefined});delete r._editId;}
+    closeModal();renderAllAvatars();refreshStats();renderResPanel();
+    notify('✅','Personnage modifié !');return;
+  }
+  const r=makeResident(name,{...CS,name});
+  G.residents.push(r);
+  G.residents.slice(0,-1).forEach(ex=>{
+    G.relations.push({id:uid(),a:r.id,b:ex.id,type:'neutral',score:50});
+  });
+  closeModal();createAvatarEl(r);refreshStats();
+  addEvent(`🆕 ${r.name} (${r.traits.join(', ')}) débarque sur ${G.islandName} !`);
+  notify('🆕',`Bienvenue ${r.name} !`);
+  setTimeout(()=>aiDialogue(r),1000);
+}
+
+// ══════════════════════════════════════════════════════
+//  ISLAND CLICK
+// ══════════════════════════════════════════════════════
+function islandBgClick(){
+  G.selectedId=null;renderResPanel();
+}
+
+// ══════════════════════════════════════════════════════
+//  NOTIFICATIONS
+// ══════════════════════════════════════════════════════
+function notify(icon,text){
+  const c=document.getElementById('notifs');
+  const n=document.createElement('div');n.className='notif';
+  n.innerHTML=`<span style="font-size:1rem;flex-shrink:0">${icon}</span><span>${text.slice(0,68)}</span>`;
+  c.appendChild(n);
+  setTimeout(()=>{n.classList.add('out');setTimeout(()=>{try{n.remove();}catch(e){}},420);},3600);
+}
+
+// ══════════════════════════════════════════════════════
+//  MINI GAME
+// ══════════════════════════════════════════════════════
+const BEAT_COLORS=['#FF6B6B','#FFD93D','#6BCB77','#74B9FF'];
+const BEAT_EMOJIS=['🔴','🟡','🟢','🔵'];
+let MG={score:0,combo:0,active:-1,iv:null,tLeft:30,total:30};
+
+function openMG(){
+  MG={score:0,combo:0,active:-1,iv:null,tLeft:30,total:30};
+  const tr=document.getElementById('beat-track');
+  tr.innerHTML=BEAT_COLORS.map((col,i)=>`<div class="bzone" id="bz${i}" style="border-color:${col}40;color:${col}" onclick="hitBeat(${i})">${BEAT_EMOJIS[i]}</div>`).join('');
+  document.getElementById('mg-score').textContent='0';
+  document.getElementById('mg-combo').textContent='';
+  document.getElementById('mg-msg').textContent='Prêt…';
+  document.getElementById('mg-tf').style.width='100%';
+  document.getElementById('mg-overlay').className='on';
+  setTimeout(startRhythm,800);
+}
+function startRhythm(){
+  let bi=0;
+  MG.iv=setInterval(()=>{
+    MG.tLeft-=.15;
+    document.getElementById('mg-tf').style.width=Math.max(0,MG.tLeft/MG.total*100)+'%';
+    if(MG.tLeft<=0){endRhythm();return;}
+    bi++;
+    if(bi%5===0){
+      if(MG.active>=0){const oz=document.getElementById('bz'+MG.active);if(oz){oz.style.background='transparent';oz.style.borderColor=BEAT_COLORS[MG.active]+'40';oz.style.transform='scale(1)';}}
+      MG.active=Math.floor(Math.random()*4);
+      const nz=document.getElementById('bz'+MG.active);if(nz){nz.style.background=BEAT_COLORS[MG.active]+'35';nz.style.borderColor=BEAT_COLORS[MG.active];nz.style.transform='scale(1.13)';}
+    }
+  },80);
+}
+function hitBeat(i){
+  if(MG.active===i){
+    MG.score+=10*(1+Math.floor(MG.combo/5));MG.combo++;
+    document.getElementById('mg-score').textContent=MG.score;
+    document.getElementById('mg-combo').textContent='Combo x'+MG.combo+' 🔥';
+    document.getElementById('mg-msg').textContent=R(['Parfait !','Excellent !','🔥 En feu !','💥 BOOM !']);
+    const z=document.getElementById('bz'+i);if(z){z.style.filter='brightness(1.6)';setTimeout(()=>{if(z)z.style.filter='';},200);}
+  } else {MG.combo=0;document.getElementById('mg-combo').textContent='';document.getElementById('mg-msg').textContent='Raté ! 😅';}
+}
+function endRhythm(){
+  clearInterval(MG.iv);
+  document.getElementById('beat-track').innerHTML=`<div style="font-family:'Fredoka One';color:#FFD93D;font-size:1.7rem">🏆 ${MG.score} pts !</div>`;
+  document.getElementById('mg-msg').textContent='Terminé !';
+  addEvent(`🎮 Score ${MG.score} au Rhythm Island !`);
+  G.residents.forEach(r=>r.happiness=clamp(r.happiness+3,0,100));refreshStats();
+}
+function closeMG(){clearInterval(MG.iv);document.getElementById('mg-overlay').className='';}
+
+// ══════════════════════════════════════════════════════
+//  GAME CLOCK & LOOP
+// ══════════════════════════════════════════════════════
+function tickClock(){
+  G.time.min+=4;
+  if(G.time.min>=60){G.time.min=0;G.time.hour++;}
+  if(G.time.hour>=24){G.time.hour=0;G.time.day++;}
+  const t=G.time;
+  document.getElementById('clock-txt').textContent=`${DAYS[(t.day-1)%7]} ${String(t.hour).padStart(2,'0')}:${String(t.min).padStart(2,'0')}`;
+  renderSky();
+}
+
+function tickResidents(){
+  G.tick++;
+  const isSleep=G.time.hour>=23||G.time.hour<6;
+  G.residents.forEach(r=>{
+    if(r.indoor)return; // indoors don't move
+    if(r.movePause>0){r.movePause--;}
+    else{
+      r.x+=r.dirX*(isSleep?r.speed*.15:r.speed);
+      if(r.x<2||r.x>88){r.dirX*=-1;r.movePause=RN(20,55);}
+    }
+    if(G.tick%30===0){
+      if(isSleep)r.energy=clamp(r.energy+2,0,100);
+      else r.energy=clamp(r.energy-1,0,100);
+      if(r.energy<20)r.happiness=clamp(r.happiness-2,0,100);
+      r.social=clamp(r.social+(Math.random()>.5?2:-1),0,100);
+      if(Math.random()<.12){const pool=r.happiness>60?GOOD_MOODS:ALL_MOODS;r.mood=R(pool);}
+    }
+    updateAvatarEl(r);
+  });
+  // Indoor residents also drift stats
+  if(G.tick%30===0){
+    G.residents.filter(r=>r.indoor).forEach(r=>{
+      r.energy=clamp(r.energy+1,0,100);
+      r.social=clamp(r.social+2,0,100);
+      if(Math.random()<.08)r.mood=R(GOOD_MOODS);
+    });
+  }
+}
+
+let autoDialT=0,autoEvtT=0;
+function gameLoop(){
+  tickClock();tickResidents();G.tick++;
+  autoDialT++;
+  if(autoDialT>=60&&G.residents.length){
+    autoDialT=0;
+    const outdoor=G.residents.filter(r=>!r.indoor);
+    if(outdoor.length){
+      const r=R(outdoor);
+      const partner=outdoor.length>1?R(outdoor.filter(x=>x.id!==r.id)):null;
+      const isAdult=G.adultMode&&Math.random()<.25;
+      if(Math.random()<.5)aiDialogue(r,partner,isAdult);
+      else showDialog(r,getFallback(r,isAdult),isAdult);
+    }
+  }
+  autoEvtT++;
+  if(autoEvtT>=400&&G.residents.length>=2){autoEvtT=0;if(Math.random()<.55)fireEvent();}
+  // slow relation drift
+  if(G.tick%350===0&&G.relations.length){
+    const rel=R(G.relations);
+    rel.score=clamp(rel.score+RN(-7,9),0,100);
+    if(rel.score>=85&&rel.type==='neutral')rel.type='friend';
+    if(rel.score<=12&&rel.type==='neutral')rel.type='rival';
+    if(rel.score>=96&&rel.type==='friend')rel.type='love';
+    if(rel.score>=55&&rel.type==='rival')rel.type='neutral';
+    renderRelPanel();
+  }
+}
+
+// keyboard
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')closeModal();
+  if(e.key==='f'||e.key==='F')doFestival();
+  if(e.key==='e'||e.key==='E')fireEvent();
+  if(e.key==='n'||e.key==='N')openCreator();
+});
+</script>
+</body>
+</html>
